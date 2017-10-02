@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    quantify(np.array([0.1, -0.3, -0.8, 0.75]))
+    exercise_04()
 
 
 def exercise_01():
@@ -92,17 +92,39 @@ def quantification_arrays(type, vmax, r):
 
 
 # exercise 3
-def quantify(signal):
-    vj, tj = quantification_arrays('midrise', 2, 3)
-    xq = np.array([])
+def quantify(signal, type, vmax, r):
+    vj, tj = quantification_arrays(type, vmax, r)
+    # xq = np.array([])
+    xq = np.ones(len(vj)) * np.max(vj)
 
     for point in signal:
         eval = point <= tj
-        xq_value = vj[eval][0]
-        xq = np.append(xq, xq_value)
+
+        if np.any(eval):
+            xq_value = vj[eval][0]
+            xq = np.append(xq, xq_value)
 
     return xq
 
+
+# Sawtooth signal
+def sawtooth_signal():
+    x = np.linspace(-20, 20, 1000)
+    y = np.hstack((x, x, x, x, x))
+
+    # plt.plot(y)
+    # plt.show()
+    # plt.close("all")
+
+    return y
+
+
+def exercise_04():
+    signal = sawtooth_signal()
+    vmax = np.max(np.abs(signal))
+
+    r = quantify(signal, 'midrise', vmax, 3)
+    print("")
 
 if __name__ == "__main__":
     main()
