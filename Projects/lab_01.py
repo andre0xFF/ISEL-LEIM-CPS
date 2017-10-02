@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    exercise_01()
+    quantify(np.array([0.1, -0.3, -0.8, 0.75]))
 
 
 def exercise_01():
@@ -71,21 +71,38 @@ def sinwave(a, f, t):
     return a * np.cos(2 * np.pi * f * t)
 
 
+# exercise 2
 # r: number of bits per sample
 # vmax: max value to quantify
 # type-: quantifier-type (midrise or midtread)
-def quantify(r, vmax, type):
+# vj: values of quantization
+# tj: values of decision
+def quantification_arrays(type, vmax, r):
     interval = (2 * vmax) / (np.power(2, r))
 
     if type == "midtread":
-        pass
+        vj = np.arange(-1 * vmax + interval, vmax + interval / 2, interval)
+        tj = np.arange(-1 * vmax + interval * (3/2), vmax, interval)
 
-    if type == "midraise":
-        pass
+    if type == "midrise":
+        vj = np.arange(-1 * vmax + interval / 2, vmax, interval)
+        tj = np.arange(-1 * vmax + interval, vmax, interval)
 
-    vj = np.arange(0, vmax * 2 - interval, interval)
-    # tj
-    pass
+    return (vj, tj)
+
+
+# exercise 3
+def quantify(signal):
+    vj, tj = quantification_arrays('midrise', 2, 3)
+    xq = np.array([])
+
+    for point in signal:
+        eval = point <= tj
+        xq_value = vj[eval][0]
+        xq = np.append(xq, xq_value)
+
+    return xq
+
 
 if __name__ == "__main__":
     main()
