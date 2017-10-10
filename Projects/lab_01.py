@@ -99,8 +99,10 @@ def quantify(signal, type, vmax, r):
 
     for point in signal:
         eval = point <= tj
-
+        #Insert False statemente at the end of list in order for vj and eval to have same size(8)
+        eval = np.insert(eval, eval.size, False)
         if np.any(eval):
+            print("")
             xq_value = vj[eval][0]
             xq = np.append(xq, xq_value)
 
@@ -123,8 +125,28 @@ def exercise_04():
     signal = sawtooth_signal()
     vmax = np.max(np.abs(signal))
 
+    # plt.plot(y)
+    # plt.show()
+    # plt.close("all")
+
     r = quantify(signal, 'midrise', vmax, 3)
+    print(r)
+
+
+    plt.plot(signal)
+    plt.plot(r)
+    plt.show()
+    # hist, bins = np.histogram(r)
+    plt.hist(r)
+    # print(hist)
+    # print(bins)
+    plt.title("Histogram")
+    plt.show()
+
+    plt.close("all")
+
     print("")
+
 
 if __name__ == "__main__":
     main()
