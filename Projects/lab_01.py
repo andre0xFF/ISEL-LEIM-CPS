@@ -94,13 +94,14 @@ def quantification_arrays(type, vmax, r):
 # exercise 3
 def quantify(signal, type, vmax, r):
     vj, tj = quantification_arrays(type, vmax, r)
-    # xq = np.array([])
+
     xq = np.ones(len(vj)) * np.max(vj)
+    # Insert vmax in tj at the end of list in order for vj and tj to have same size(8)
+    tj = np.insert(tj, tj.size, vmax)
 
     for point in signal:
         eval = point <= tj
-        #Insert False statemente at the end of list in order for vj and eval to have same size(8)
-        eval = np.insert(eval, eval.size, False)
+
         if np.any(eval):
             print("")
             xq_value = vj[eval][0]
