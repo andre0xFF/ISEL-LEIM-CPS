@@ -95,22 +95,28 @@ def quantification_arrays(type, vmax, r):
 def quantify(signal, type, vmax, r):
     vj, tj = quantification_arrays(type, vmax, r)
 
-    xq = np.ones(len(vj)) * np.max(vj)
-    # Insert vmax in tj at the end of list in order for vj and tj to have same size(8)
+    # Multiply by the max possible value in case the point is outside from tj limit
+    # mq = np.ones(len(vj)) * np.max(vj)
+    mq = np.array([])
+
+    # Insert vmax in tj at the end of list in order for vj and tj to have same size
     tj = np.insert(tj, tj.size, vmax)
 
+    # Loop every point in the signal and check if the point is lower or equal
+    # than any tj elements (decision values)
     for point in signal:
         eval = point <= tj
 
+        # Test whether any array element along a given axis evaluates to True
         if np.any(eval):
-            print("")
+
             xq_value = vj[eval][0]
-            xq = np.append(xq, xq_value)
+            mq = np.append(mq, xq_value)
 
-    return xq
+    return mq
 
 
-# Sawtooth signal
+# sawtooth signal
 def sawtooth_signal():
     x = np.linspace(-20, 20, 1000)
     y = np.hstack((x, x, x, x, x))
