@@ -128,31 +128,37 @@ def sawtooth_signal():
     return y
 
 
+# signal = m(n)
+# mq: signal quantified = eq(n) + mp(n)
 def exercise_04():
+    # a)
     signal = sawtooth_signal()
     vmax = np.max(np.abs(signal))
 
-    # plt.plot(y)
-    # plt.show()
-    # plt.close("all")
-
-    r = quantify(signal, 'midrise', vmax, 3)
-    print(r)
-
+    mq = quantify(signal, 'midrise', vmax, 3)
+    print("m(q) = {}".format(mq))
 
     plt.plot(signal)
-    plt.plot(r)
+    plt.plot(mq)
     plt.show()
-    # hist, bins = np.histogram(r)
-    plt.hist(r)
-    # print(hist)
-    # print(bins)
+
+    # b)
+    # The mp(n) starts with the same element as m(n)
+    mp = np.copy(mq)
+    mp = np.insert(mp, 0, signal[0])
+    mp = np.delete(mp, len(mp) - 1)
+
+    # error formula
+    error = signal - mp
+
+    # quantification of error
+    error_quantified = quantify(error, 'midrise', vmax, 3)
+
+    plt.hist(error_quantified)
     plt.title("Histogram")
     plt.show()
 
-    plt.close("all")
-
-    print("")
+    # c)
 
 
 if __name__ == "__main__":
