@@ -2,10 +2,11 @@
 import numpy as np
 import scipy.io.wavfile as wav
 import matplotlib.pyplot as plt
+import scipy.signal as ss
 
 
 def main():
-    exercise_04()
+    exercise_06()
 
 
 def exercise_01():
@@ -88,7 +89,7 @@ def quantification_arrays(type, vmax, r):
         vj = np.arange(-1 * vmax + interval / 2, vmax, interval)
         tj = np.arange(-1 * vmax + interval, vmax, interval)
 
-    return (vj, tj)
+    return vj, tj
 
 
 # exercise 3
@@ -134,12 +135,14 @@ def exercise_04():
     # a)
     signal = sawtooth_signal()
     vmax = np.max(np.abs(signal))
+    r = 3
 
-    mq = quantify(signal, 'midrise', vmax, 3)
+    mq = quantify(signal, 'midrise', vmax, r)
     print("m(q) = {}".format(mq))
 
     plt.plot(signal)
     plt.plot(mq)
+    # plt.plot(xQ)
     plt.show()
 
     # b)
@@ -159,6 +162,75 @@ def exercise_04():
     plt.show()
 
     # c)
+    px = np.sum(signal * signal) / len(signal)
+    r = np.arange(3, 9)
+
+    snr_t = np.arange(len(r), dtype='float')
+    snr_p = np.arange(len(r), dtype='float')
+
+    for i in range(len(r)):
+        mq = quantify(signal, 'midrise', vmax, r[i])
+        eq = signal - mq
+        pq = np.sum(eq * eq) / len(eq)
+        snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
+        snr_p[i] = 10 * np.log10(px / pq)
+
+    # TODO: Graph
+
+
+def exercise_05():
+    # a)
+    fs, x = wav.read("som_8_16_mono.wav")
+
+    plt.hist(x)
+    plt.title("Histogram")
+    plt.show()
+
+    # b)
+    # TODO
+
+    # c)
+    vmax = np.max(np.abs(x))
+    px = np.sum(x, x) / len(x)
+    r = np.arange(3, 9)
+
+    snr_t = np.arange(len(r), dtype='float')
+    snr_p = np.arange(len(r), dtype='float')
+
+    for i in range(len(r)):
+        mq = quantify(x, 'midrise', vmax, r[i])
+        eq = x - mq
+        pq = np.sum(eq * eq) / len(eq)
+        snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
+        snr_p[i] = 10 * np.log10(px / pq)
+
+    # TODO: Graphs and comments
+
+
+def exercise_06():
+    fs = 44000
+    t = np.arange(fs)
+    signal = 4 * np.cos(2 * np.pi * 10000 * t) + 10 * np.cos(2 * np.pi * 25000 * t)
+
+    # a)
+    fc1 = 20000
+    low_pass_filter = ss.firwin(fc1, 1 / fc1, scale=True)
+    x = np.fft.fft(signal)
+    x_freq = np.fft.fftfreq(len(signal))
+
+    plt.plot(x_freq, np.abs(x))
+    plt.show()
+
+    plt.plot(signal)
+    plt.show()
+
+    a = np.convolve(low_pass_filter, x)
+    a_freq = np.fft.fftfreq(len(a)) * fs
+
+    plt.plot(a_freq, np.abs(a))
+    plt.show()
+
+    # b)
 
 
 if __name__ == "__main__":
