@@ -6,7 +6,7 @@ import scipy.signal as ss
 
 
 def main():
-    exercise_06()
+    exercise_04()
 
 
 def exercise_01():
@@ -89,7 +89,7 @@ def quantification_arrays(type, vmax, r):
         vj = np.arange(-1 * vmax + interval / 2, vmax, interval)
         tj = np.arange(-1 * vmax + interval, vmax, interval)
 
-    return vj, tj
+    return (vj, tj)
 
 
 # exercise 3
@@ -99,6 +99,11 @@ def quantify(signal, type, vmax, r):
     # Multiply by the max possible value in case the point is outside from tj limit
     # mq = np.ones(len(vj)) * np.max(vj)
     mq = np.array([])
+
+    # To save the indexes of vj evaluation
+    # Initialize as a matrix so can we can use np.unpackbits
+    # and assign a first value so we can append later
+    idx = np.array([[254]], dtype='uint8')
 
     # Insert vmax in tj at the end of list in order for vj and tj to have same size
     tj = np.insert(tj, tj.size, vmax)
@@ -110,11 +115,14 @@ def quantify(signal, type, vmax, r):
 
         # Test whether any array element along a given axis evaluates to True
         if np.any(eval):
-
             xq_value = vj[eval][0]
             mq = np.append(mq, xq_value)
+            idx = np.append(idx, np.array([[np.nonzero(eval)[0][0]]]), axis=0)
 
-    return mq
+    # Remove the 1st fictitious value
+    idx = idx[1:].astype('uint8')
+
+    return (mq, idx)
 
 
 # sawtooth signal
@@ -137,7 +145,7 @@ def exercise_04():
     vmax = np.max(np.abs(signal))
     r = 3
 
-    mq = quantify(signal, 'midrise', vmax, r)
+    mq, idx = quantify(signal, 'midrise', vmax, r)
     print("m(q) = {}".format(mq))
 
     plt.plot(signal)
@@ -155,7 +163,7 @@ def exercise_04():
     error = signal - mp
 
     # quantification of error
-    error_quantified = quantify(error, 'midrise', vmax, 3)
+    error_quantified, idx = quantify(error, 'midrise', vmax, 3)
 
     plt.hist(error_quantified)
     plt.title("Histogram")
@@ -169,7 +177,7 @@ def exercise_04():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        mq = quantify(signal, 'midrise', vmax, r[i])
+        mq, idx = quantify(signal, 'midrise', vmax, r[i])
         eq = signal - mq
         pq = np.sum(eq * eq) / len(eq)
         snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
