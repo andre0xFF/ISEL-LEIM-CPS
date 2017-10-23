@@ -89,7 +89,7 @@ def quantification_arrays(type, vmax, r):
         vj = np.arange(-1 * vmax + interval / 2, vmax, interval)
         tj = np.arange(-1 * vmax + interval, vmax, interval)
 
-    return (vj, tj)
+    return vj, tj
 
 
 # exercise 3
@@ -100,10 +100,10 @@ def quantify(signal, type, vmax, r):
     # mq = np.ones(len(vj)) * np.max(vj)
     mq = np.array([])
 
-    # To save the indexes of vj evaluation
+    # Save the indexes of vj evaluation
     # Initialize as a matrix so can we can use np.unpackbits
     # and assign a first value so we can append later
-    idx = np.array([[254]], dtype='uint8')
+    indexes = np.array([[254]], dtype='uint8')
 
     # Insert vmax in tj at the end of list in order for vj and tj to have same size
     tj = np.insert(tj, tj.size, vmax)
@@ -117,12 +117,15 @@ def quantify(signal, type, vmax, r):
         if np.any(eval):
             xq_value = vj[eval][0]
             mq = np.append(mq, xq_value)
-            idx = np.append(idx, np.array([[np.nonzero(eval)[0][0]]]), axis=0)
+
+            # Get the index
+            idx = np.nonzero(eval)[0][0]
+            indexes = np.append(indexes, np.array([[idx]], dtype='uint8'), axis=0)
 
     # Remove the 1st fictitious value
-    idx = idx[1:].astype('uint8')
+    indexes = indexes[1:]
 
-    return (mq, idx)
+    return mq, indexes
 
 
 # sawtooth signal

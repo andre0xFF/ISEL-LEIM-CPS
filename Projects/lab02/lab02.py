@@ -1,4 +1,7 @@
 import numpy as np
+import lab01
+from lab01.lab01 import sawtooth_signal, quantify
+
 
 
 def main():
@@ -11,6 +14,20 @@ def main():
 
 
 def exercise_01():
+    signal = sawtooth_signal()
+    vmax = np.max(np.abs(signal))
+    r = 3
+
+    mq, idx = quantify(signal, 'midrise', vmax, r)
+    test = np.unpackbits(idx, axis=1)
+    print('')
+
+
+def pcm_encode(idx, r):
+    pass
+
+
+def pcm_decode():
     pass
 
 
