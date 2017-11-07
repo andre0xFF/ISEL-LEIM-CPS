@@ -96,40 +96,30 @@ def quantification_arrays(type, vmax, r):
 def quantify(signal, type, vmax, r):
     vj, tj = quantification_arrays(type, vmax, r)
 
-    # Multiply by the max possible value in case the point is outside from tj limit
-    # mq = np.ones(len(vj)) * np.max(vj)
-    mq = np.array([])
+    tj = np.insert(tj, len(tj), vmax)
 
-    # Save the indexes of vj evaluation
+    # Majorate mq array as default value
+    mq = np.ones(len(signal)) * np.max(vj)
+
     # Initialize as a matrix so can we can use np.unpackbits
-    # and assign a first value so we can append later
-
-    # indexes = np.array([[254]], dtype='uint8')
-    indexes = np.array([[254]])
-
-    # Insert vmax in tj at the end of list in order for vj and tj to have same size
-    tj = np.insert(tj, tj.size, vmax)
+    # Majorate the index incase as default value
+    idx = np.ones(shape=(len(signal), 1), dtype='uint8') * len(vj)
 
     # Loop every point in the signal and check if the point is lower or equal
     # than any tj elements (decision values)
-    for point in signal:
-        eval = point <= tj
+    for i in range(len(signal)):
+        eval = signal[i] <= tj
 
         # Test whether any array element along a given axis evaluates to True
         if np.any(eval):
             xq_value = vj[eval][0]
-            mq = np.append(mq, xq_value)
+            mq[i] = xq_value
 
             # Get the index
-            idx = np.nonzero(eval)[0][0]
-            # indexes = np.append(indexes, np.array([[idx]], dtype='uint8'), axis=0)
-            indexes = np.append(indexes, np.array([[np.binary_repr(idx, 11)]]), axis=0)
-    print("")
+            k = np.nonzero(eval)[0][0]
+            idx[i] = k
 
-    # Remove the 1st fictitious value
-    indexes = indexes[1:]
-
-    return mq, indexes
+    return mq, idx
 
 
 # sawtooth signal
