@@ -26,6 +26,16 @@ def exercise_01():
 
 
 def pcm_encode(idx, r):
+    # TODO: Hamming sample
+    # dt = np.dtype((np.int32, {'f0': (np.uint8, 3), 'f1': (np.uint8, 2), 'f2': (np.uint8, 1), 'f3': (np.uint8, 0)}))
+    # x = np.arange(12, dtype=np.int32) * 1000
+    # x1 = x.view(dtype=dt)
+    # np.array([x1['f0'], x1['f1'], x1['f2'], x1['f3']])
+    #
+    # p = np.unpackbits(np.array([x1['f0'], x1['f1'], x1['f2'], x1['f3']]), axis=0)[:, 1]
+    # p[len(p) - 11:len(p)]
+    
+
     idx = np.copy(idx)
     # bits = np.zeros(shape=(len(idx), r))
 

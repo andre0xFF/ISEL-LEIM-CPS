@@ -131,6 +131,7 @@ def uniform_midrise_quantizer(vmax, delta_q):
 # mq: quantified signal
 # idx: indexes of each quantified value
 def quantify(signal, vmax, vj, tj):
+    # TODO: modify idx matrix to vector
     tj = np.insert(tj, len(tj), vmax)
 
     # Majorate mq array as default value
