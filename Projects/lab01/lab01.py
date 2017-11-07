@@ -6,7 +6,8 @@ import scipy.signal as ss
 
 
 def main():
-    exercise_04()
+    example()
+    # exercise_04()
 
 
 def exercise_01():
@@ -72,30 +73,64 @@ def sinwave(a, f, t):
     return a * np.cos(2 * np.pi * f * t)
 
 
+def example():
+    # sample 1, page 101
+    vmax = 10
+    r = 40 / (2 * 10)
+    delta_q = (2 * vmax) / (np.power(2, r))
+    vj, tj = uniform_midtread_quantizer(vmax, delta_q)
+
+    # sample 2, page 101
+    vmax = 1
+    r = 20 / (2 * 5)
+    delta_q = (2 * vmax) / (np.power(2, r))
+    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+
+    # sample 3, page 85, midrise
+    vmax = 1
+    delta_q = 2 * vmax / 8
+    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+
+    n = np.arange(0, 8)
+    m = np.round(np.sin(2 * np.pi * (np.float(1300) / 8000) * n), decimals=3)
+    vmax = np.max(np.abs(m))
+    plt.plot(m)
+
+    mq, idx = quantify(m, vmax, vj, tj)
+    plt.plot(mq)
+
+    # sample 3, page 85, midtread
+    vj, tj = uniform_midtread_quantizer(vmax, delta_q)
+    mq, idx = quantify(m, vmax, vj, tj)
+    plt.plot(mq)
+
+    plt.show()
+
+
 # exercise 2
 # r: number of bits per sample
 # vmax: max value to quantify
 # type-: quantifier-type (midrise or midtread)
 # vj: values of quantization
 # tj: values of decision
-def quantification_arrays(type, vmax, r):
-    interval = (2 * vmax) / (np.power(2, r))
+def uniform_midtread_quantizer(vmax, delta_q):
+    vj = np.arange(-1 * vmax + delta_q, vmax + delta_q / 2, delta_q)
+    tj = np.arange(-1 * vmax + delta_q * (3 / 2), vmax, delta_q)
 
-    if type == "midtread":
-        vj = np.arange(-1 * vmax + interval, vmax + interval / 2, interval)
-        tj = np.arange(-1 * vmax + interval * (3/2), vmax, interval)
+    return vj, tj
 
-    if type == "midrise":
-        vj = np.arange(-1 * vmax + interval / 2, vmax, interval)
-        tj = np.arange(-1 * vmax + interval, vmax, interval)
+
+def uniform_midrise_quantizer(vmax, delta_q):
+    vj = np.arange(-1 * vmax + delta_q / 2, vmax, delta_q)
+    tj = np.arange(-1 * vmax + delta_q, vmax, delta_q)
 
     return vj, tj
 
 
 # exercise 3
-def quantify(signal, type, vmax, r):
-    vj, tj = quantification_arrays(type, vmax, r)
-
+# mq: quantified signal
+# idx: indexes of each quantified value
+def quantify(signal, vmax, vj, tj):
     tj = np.insert(tj, len(tj), vmax)
 
     # Majorate mq array as default value
@@ -142,7 +177,10 @@ def exercise_04():
     vmax = np.max(np.abs(signal))
     r = 3
 
-    mq, idx = quantify(signal, 'midrise', vmax, r)
+    delta_q = (2 * vmax) / (np.power(2, r))
+    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+    mq, idx = quantify(signal, vmax, vj, tj)
+
     print("m(q) = {}".format(mq))
 
     plt.plot(signal)
@@ -160,7 +198,7 @@ def exercise_04():
     error = signal - mp
 
     # quantification of error
-    error_quantified, idx = quantify(error, 'midrise', vmax, 3)
+    error_quantified, idx = quantify(error, vmax, vj, tj)
 
     plt.hist(error_quantified)
     plt.title("Histogram")
@@ -174,7 +212,10 @@ def exercise_04():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        mq, idx = quantify(signal, 'midrise', vmax, r[i])
+        delta_q = (2 * vmax) / (np.power(2, r[i]))
+        vj, tj = uniform_midtread_quantizer(vmax, delta_q)
+        mq, idx = quantify(signal, vmax, vj, tj)
+
         eq = signal - mq
         pq = np.sum(eq * eq) / len(eq)
         snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
@@ -203,7 +244,10 @@ def exercise_05():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        mq = quantify(x, 'midrise', vmax, r[i])
+        delta_q = (2 * vmax) / (np.power(2, r[i]))
+        vj, tj = uniform_midtread_quantizer(vmax, delta_q)
+        mq = quantify(x, vmax, vj, tj)
+
         eq = x - mq
         pq = np.sum(eq * eq) / len(eq)
         snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
