@@ -7,7 +7,7 @@ import scipy.signal as ss
 
 def main():
     example()
-    # exercise_04()
+    exercise_04()
 
 
 def exercise_01():
@@ -93,7 +93,6 @@ def example():
 
     n = np.arange(0, 8)
     m = np.round(np.sin(2 * np.pi * (np.float(1300) / 8000) * n), decimals=3)
-    vmax = np.max(np.abs(m))
     plt.plot(m)
 
     mq, idx = quantify(m, vmax, vj, tj)
@@ -131,15 +130,14 @@ def uniform_midrise_quantizer(vmax, delta_q):
 # mq: quantified signal
 # idx: indexes of each quantified value
 def quantify(signal, vmax, vj, tj):
-    # TODO: modify idx matrix to vector
     tj = np.insert(tj, len(tj), vmax)
 
     # Majorate mq array as default value
     mq = np.ones(len(signal)) * np.max(vj)
 
-    # Initialize as a matrix so can we can use np.unpackbits
-    # Majorate the index incase as default value
-    idx = np.ones(shape=(len(signal), 1), dtype='uint8') * len(vj)
+    # Majorate the index as default value
+    # idx = np.ones(shape=(len(signal), 1), dtype='uint8') * len(vj)
+    idx = np.ones(len(signal), dtype='uint32') * len(vj)
 
     # Loop every point in the signal and check if the point is lower or equal
     # than any tj elements (decision values)
