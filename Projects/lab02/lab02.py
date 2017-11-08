@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
 import numpy as np
-import lab01
-from lab01.lab01 import sawtooth_signal, quantify
+import matplotlib.pyplot as plt
+import scipy.io.wavfile as wav
+from lab01.lab01 import sawtooth_signal, quantify, uniform_midrise_quantizer
 
 
 def main():
+    example()
     exercise_01()
     exercise_02()
     exercise_03()
@@ -12,62 +15,90 @@ def main():
     exercise_06()
 
 
+def example():
+    # sample 3, page 85, midrise
+    vmax = 1
+    delta_q = 2 * vmax / 8
+    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+
+    n = np.arange(0, 8)
+    m = np.round(np.sin(2 * np.pi * (np.float(1300) / 8000) * n), decimals=3)
+
+    mq, idx = quantify(m, vmax, vj, tj)
+
+    bin = pcm_encode(idx, 3)
+    dec = pcm_decode(bin)
+
+    print('Quantize signal must be equal to (Encode > Decode > Dequantize): {}'. format(np.array_equal(mq, vj[dec])))
+
+
 def exercise_01():
     signal = sawtooth_signal()
     vmax = np.max(np.abs(signal))
     r = 3
 
-    mq, idx = quantify(signal, 'midrise', vmax, r)
+    delta_q = (2 * vmax) / (np.power(2, r))
+    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+    mq, idx = quantify(signal, vmax, vj, tj)
 
-    bits = pcm_encode(idx, r)
-    test = pcm_decode(bits)
-
-    print('')
+    bin = pcm_encode(idx, r)
+    dec = pcm_decode(bin)
 
 
 def pcm_encode(idx, r):
-    # TODO: Hamming sample
-    # dt = np.dtype((np.int32, {'f0': (np.uint8, 3), 'f1': (np.uint8, 2), 'f2': (np.uint8, 1), 'f3': (np.uint8, 0)}))
-    # x = np.arange(12, dtype=np.int32) * 1000
-    # x1 = x.view(dtype=dt)
-    # np.array([x1['f0'], x1['f1'], x1['f2'], x1['f3']])
-    #
-    # p = np.unpackbits(np.array([x1['f0'], x1['f1'], x1['f2'], x1['f3']]), axis=0)[:, 1]
-    # p[len(p) - 11:len(p)]
-    
+    # New data type to divide an int32 variable into 4 int8 variables
+    dt = np.dtype((np.int32, {'f0': (np.uint8, 3), 'f1': (np.uint8, 2), 'f2': (np.uint8, 1), 'f3': (np.uint8, 0)}))
 
-    idx = np.copy(idx)
-    # bits = np.zeros(shape=(len(idx), r))
+    # Convert the vector into new data type
+    idx_uint8 = idx.view(dtype=dt)
 
-    bits = np.unpackbits(idx)
+    # Pack an numpy array with the 4 uint8 variables
+    idx_uint8 = np.array([idx_uint8['f0'], idx_uint8['f1'], idx_uint8['f2'], idx_uint8['f3']])
 
+    # Transpose so we get each number by row
+    idx_uint8 = np.transpose(idx_uint8)
 
+    # Convert to binary
+    idx_bin = np.unpackbits(idx_uint8, axis=1)
 
-    # Codify quantification indexes
-    bits = np.unpackbits(idx, axis=1)
+    # Slice into the desired number of bits
+    idx_bin = idx_bin[:, len(idx_bin[0]) - r:len(idx_bin[0])]
 
-    # Slice the codification to r bits
-    return bits[:, len(bits[0]) - r:]
+    return idx_bin
 
 
 def pcm_decode(bits):
-    # Check if bits is a bi-dimensional array
-    if len(bits.shape) == 1:
-        return -1
+    return bits.dot(1 << np.arange(bits.shape[-1] - 1, -1, -1))
 
-    # If the representation is already in 8 bits
-    if len(bits[0]) == 8:
-        return np.packbits(bits, axis=1)
 
-    # Create an aux array with an 8 bit representation to work with .packbits()
-    a = np.zeros(shape=(len(bits), 8), dtype='uint8')
-    a[:, 8 - len(bits[0]):] = bits[:, :]
+def gray_encode(idx, r):
+    pass
 
-    return np.packbits(a, axis=1)
+
+def gray_decode(bits):
+    pass
 
 
 def exercise_02():
-    pass
+    # TODO: SNR calculation
+    fs, m = wav.read("lab01/som_8_16_mono.wav")
+
+    vmax = np.max(np.abs(m))
+    r = np.array([3, 5, 8])
+
+    for i in r:
+        delta_q = (2 * vmax) / (np.power(2, i))
+        vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+        mq, idx = quantify(m, vmax, vj, tj)
+
+        filename = 'lab02/som_8_16_quantize_{}.wav'.format(i)
+        wav.write(filename, fs, mq.astype('int16'))
+
+        bin = pcm_encode(idx, i)
+        dec = pcm_decode(bin)
+
+        filename = 'lab02/som_8_16_quantize_encode_decode_dequantize_{}.wav'.format(i)
+        wav.write(filename, fs, vj[dec].astype('int16'))
 
 
 def exercise_03():
