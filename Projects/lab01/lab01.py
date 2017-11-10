@@ -95,12 +95,12 @@ def example():
     m = np.round(np.sin(2 * np.pi * (np.float(1300) / 8000) * n), decimals=3)
     plt.plot(m)
 
-    mq, idx = quantify(m, vmax, vj, tj)
+    mq, idx = quantize(m, vmax, vj, tj)
     plt.plot(mq)
 
     # sample 3, page 85, midtread
     vj, tj = uniform_midtread_quantizer(vmax, delta_q)
-    mq, idx = quantify(m, vmax, vj, tj)
+    mq, idx = quantize(m, vmax, vj, tj)
     plt.plot(mq)
 
     plt.show()
@@ -129,7 +129,7 @@ def uniform_midrise_quantizer(vmax, delta_q):
 # exercise 3
 # mq: quantified signal
 # idx: indexes of each quantified value
-def quantify(signal, vmax, vj, tj):
+def quantize(signal, vmax, vj, tj):
     tj = np.insert(tj, len(tj), vmax)
 
     # Majorate mq array as default value
@@ -178,7 +178,7 @@ def exercise_04():
 
     delta_q = (2 * vmax) / (np.power(2, r))
     vj, tj = uniform_midrise_quantizer(vmax, delta_q)
-    mq, idx = quantify(signal, vmax, vj, tj)
+    mq, idx = quantize(signal, vmax, vj, tj)
 
     print("m(q) = {}".format(mq))
 
@@ -196,8 +196,8 @@ def exercise_04():
     # error formula
     error = signal - mp
 
-    # quantification of error
-    error_quantified, idx = quantify(error, vmax, vj, tj)
+    # quantization of error
+    error_quantified, idx = quantize(error, vmax, vj, tj)
 
     plt.hist(error_quantified)
     plt.title("Histogram")
@@ -211,16 +211,29 @@ def exercise_04():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        delta_q = (2 * vmax) / (np.power(2, r[i]))
+        delta_q = quantization_interval(vmax, r[i])
         vj, tj = uniform_midtread_quantizer(vmax, delta_q)
-        mq, idx = quantify(signal, vmax, vj, tj)
+        mq, idx = quantize(signal, vmax, vj, tj)
 
         eq = signal - mq
         pq = np.sum(eq * eq) / len(eq)
-        snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
-        snr_p[i] = 10 * np.log10(px / pq)
+
+        snr_t[i] = snr_theoric(r[i], px, vmax)
+        snr_p[i] = snr_pratic(px, pq)
 
     # TODO: Graph
+
+
+def quantization_interval(v, r):
+    return (2 * v) / (np.power(2, r))
+
+
+def snr_theoric(r, p, v):
+    return 6.02 * r + 10 * np.log10(3 * p / np.power(v, 2))
+
+
+def snr_pratic(p_signal, p_quantized):
+    return 10 * np.log10(p_signal / p_quantized)
 
 
 def exercise_05():
@@ -245,12 +258,13 @@ def exercise_05():
     for i in range(len(r)):
         delta_q = (2 * vmax) / (np.power(2, r[i]))
         vj, tj = uniform_midtread_quantizer(vmax, delta_q)
-        mq = quantify(x, vmax, vj, tj)
+        mq = quantize(x, vmax, vj, tj)
 
         eq = x - mq
         pq = np.sum(eq * eq) / len(eq)
-        snr_t[i] = 6 * r[i] + 10 * np.log10(3 * px / np.power(vmax, 2))
-        snr_p[i] = 10 * np.log10(px / pq)
+
+        snr_t = snr_theoric(r[i], px, vmax)
+        snr_p = snr_pratic(px, pq)
 
     # TODO: Graphs and comments
 
