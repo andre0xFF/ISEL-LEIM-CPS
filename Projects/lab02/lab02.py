@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav
-from lab01.lab01 import sawtooth_signal, quantize, uniform_midrise_quantizer, quantization_interval, snr_theoric
+import lab01.lab01 as lab01
 
 
 def main():
@@ -19,27 +19,29 @@ def example():
     # sample 3, page 85, midrise
     vmax = 1
     delta_q = 2 * vmax / 8
-    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
+    vj, tj = lab01.uniform_midrise_quantizer(vmax, delta_q)
 
     n = np.arange(0, 8)
     m = np.round(np.sin(2 * np.pi * (np.float(1300) / 8000) * n), decimals=3)
 
-    mq, idx = quantize(m, vmax, vj, tj)
+    mq, idx = lab01.quantize(m, vmax, vj, tj)
 
     bin = pcm_encode(idx, 3)
     dec = pcm_decode(bin)
 
-    print('Quantized signal must be equal to (Encode > Decode > Dequantize): {}'. format(np.array_equal(mq, vj[dec])))
+    xq = dequantize(vj, dec)
+
+    print('Quantized signal must be equal to (Encode > Decode > Dequantize): {}'. format(np.array_equal(mq, xq)))
 
 
 def exercise_01():
-    signal = sawtooth_signal()
-    vmax = np.max(np.abs(signal))
+    signal = lab01.sawtooth_signal()
+    vmax = lab01.vmax_calculation(signal)
     r = 3
 
-    delta_q = quantization_interval(vmax, r)
-    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
-    mq, idx = quantize(signal, vmax, vj, tj)
+    delta_q = lab01.quantization_interval(vmax, r)
+    vj, tj = lab01.uniform_midrise_quantizer(vmax, delta_q)
+    mq, idx = lab01.quantize(signal, vmax, vj, tj)
 
     bin = pcm_encode(idx, r)
     dec = pcm_decode(bin)
@@ -82,14 +84,14 @@ def gray_decode(bits):
 def exercise_02():
     fs, m = wav.read("lab01/som_8_16_mono.wav")
 
-    vmax = np.max(np.abs(m))
+    vmax = lab01.vmax_calculation(m)
     r = np.array([3, 5, 8])
     snr = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        delta_q = quantization_interval(vmax, r[i])
-        vj, tj = uniform_midrise_quantizer(vmax, delta_q)
-        mq, idx = quantize(m, vmax, vj, tj)
+        delta_q = lab01.quantization_interval(vmax, r[i])
+        vj, tj = lab01.uniform_midrise_quantizer(vmax, delta_q)
+        mq, idx = lab01.quantize(m, vmax, vj, tj)
 
         filename = 'lab02/som_8_16_quantize_{}bits.wav'.format(r[i])
         wav.write(filename, fs, mq.astype('int16'))
@@ -101,7 +103,7 @@ def exercise_02():
         wav.write(filename, fs, dequantize(vj, dec).astype('int16'))
 
         p = np.sum(m * m) / len(m)
-        snr[i] = snr_theoric(r[i], p, vmax)
+        snr[i] = lab01.snr_theoric(r[i], p, vmax)
 
 
 def dequantize(vj, indexes):
@@ -109,15 +111,17 @@ def dequantize(vj, indexes):
 
 
 def exercise_03():
+    # Hamming parameters
     n = 15
     r = 11
 
-    m = sawtooth_signal()
+    # Signal quantization
+    m = lab01.sawtooth_signal()
 
-    vmax = np.max(np.abs(m))
-    delta_q = quantization_interval(vmax, r)
-    vj, tj = uniform_midrise_quantizer(vmax, delta_q)
-    mq, idx = quantize(m, vmax, vj, tj)
+    vmax = lab01.vmax_calculation(m)
+    delta_q = lab01.quantization_interval(vmax, r)
+    vj, tj = lab01.uniform_midrise_quantizer(vmax, delta_q)
+    mq, idx = lab01.quantize(m, vmax, vj, tj)
 
     # Parity matrix
     P = np.array([
@@ -132,41 +136,157 @@ def exercise_03():
         [1, 0, 1, 0],
         [1, 0, 0, 1],
         [1, 1, 0, 0],
-    ])
+    ], dtype='uint8')
 
     # Encode and codify with Hamming(15, 11)
     bin = pcm_encode(idx, r)
-    c = hamming(bin, P, n, r)
+    x = hamming(bin, P, n, r)
 
-    # Generate an error to simulate the channel
-    error = np.random.binomial(1, 0.01, len(c))
-    y = (c + error) % 2
+    # Simulate channel communication
+    y = channel(x, 0.01)
+
+    # Measure the elapsed time to correct errors
+    from time import time
+    start_time = time()
+
+    # Detect and correct error/noise
+    y = error_correction(y, P)
+
+    elapsed_time = time() - start_time
+    print('Error correction elapsed time: {} s'.format(elapsed_time))
+
+
+def channel(x, ber):
+    x = np.copy(x)
+
+    # Generate error/noise to simulate channel communication
+    error = np.random.binomial(1, ber, len(x[0]) * len(x))
+    y = (np.ndarray.flatten(x) + error) % 2
+
+    # Build back the matrix from vector
+    col = len(x[0])
+    row = len(x)
+    y = np.reshape(y, (row, col))
+
+    return y
 
 
 def hamming(message, P, n, r):
-    G = np.hstack((np.identity(15 - len(P[0])), P))
+    G = np.hstack((np.identity(n - len(P[0]), dtype='uint8'), P))
 
     # C = np.logical_xor(m, G)
-    C = np.dot(message, G) % 2
-    return np.ndarray.flatten(C)
+    return np.dot(message, G) % 2
 
 
 def error_correction(message, P):
+    # Form the H matrix
     H = np.vstack((P, np.identity(len(P[0]))))
-    S = np.dot(message, H)
 
-    i = np.nonzero(S)[0]
+    # Divide the message by r bits
+    # col = len(H)
+    # row = np.int32(len(message) / col)
+    # message = np.reshape(message, (row, col))
 
-    if len(i) == 0:
-        return S
+    # Calculate the S matrix
+    S = np.dot(message, H) % 2
+
+    # If S is == 0 then there's no error in that sub-message
+    # Else find the row position where sub-message is equal to S
+    # Then flip the bit in the sub-message at row position
+    for row in range(len(S)):
+        if np.all(S[row] == 0):
+            continue
+
+        col = np.argwhere(np.all(H == S[row], axis=1))[0][0]
+        message[row, col] = np.logical_not(message[row, col])
+
+    return message[:, 0:-1 * len(P[0])]
 
 
 def exercise_04():
-    pass
+    # Hamming parameters
+    n = 15
+    r = 11
+
+    # Signal quantization
+    m = lab01.sawtooth_signal()
+
+    vmax = lab01.vmax_calculation(m)
+    delta_q = lab01.quantization_interval(vmax, r)
+    vj, tj = lab01.uniform_midrise_quantizer(vmax, delta_q)
+    mq, idx = lab01.quantize(m, vmax, vj, tj)
+
+    # Parity matrix
+    P = np.array([
+        [1, 1, 1, 1],
+        [0, 1, 1, 1],
+        [1, 0, 1, 1],
+        [1, 1, 0, 1],
+        [1, 1, 1, 0],
+        [0, 0, 1, 1],
+        [0, 1, 0, 1],
+        [0, 1, 1, 0],
+        [1, 0, 1, 0],
+        [1, 0, 0, 1],
+        [1, 1, 0, 0],
+    ], dtype='uint8')
+
+    # Encode and codify with Hamming(15, 11)
+    bin = pcm_encode(idx, r)
+    x = hamming(bin, P, n, r)
+
+    ber_theoric = np.array([.01, .05, .1, .5, .75, 1])
+    ber_pratic = np.zeros(shape=(len(ber_theoric), 2))
+    snr = np.zeros(len(ber_theoric))
+
+    for i in range(len(ber_theoric)):
+        # Channel simmulation
+        y = channel(x, ber_theoric[i])
+        ber_pratic[i, 0] = bit_error_rate(x, y)
+
+        # Error correction
+        y = error_correction(y, P)
+        ber_pratic[i, 1] = bit_error_rate(bin, y)
+
+        # Decode and Dequantize
+        idx = pcm_decode(y)
+        mq = dequantize(vj, idx)
+
+        # SNR
+        error = m - mq
+        p_error = lab01.signal_power(error)
+        p = lab01.signal_power(m)
+
+        snr[i] = lab01.snr_pratic(p, p_error)
+
+
+def bit_error_rate(a, b):
+    return np.sum(np.array([a != b])) / len(a)
 
 
 def exercise_05():
-    pass
+    f = 3500
+    t = np.linspace(0, 8, f * 8)
+    m = np.sin(2 * np.pi * f * t)
+    fs = 8000
+
+    if not nyquist(f, fs):
+        return
+
+    m = m[0:4]
+    r = 3
+
+    vmax = lab01.vmax_calculation(m)
+    delta_q = lab01.quantization_interval(vmax, r)
+    vj, tj = lab01.uniform_midrise_quantizer(vmax, delta_q)
+    mq, idx = lab01.quantize(m, vmax, vj, tj)
+    x = pcm_encode(idx, r)
+
+    print('')
+
+
+def nyquist(f, fs):
+    return f * 2 <= fs
 
 
 def exercise_06():
