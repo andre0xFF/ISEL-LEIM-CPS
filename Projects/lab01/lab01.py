@@ -77,13 +77,13 @@ def example():
     # sample 1, page 101
     vmax = 10
     r = 40 / (2 * 10)
-    delta_q = (2 * vmax) / (np.power(2, r))
+    delta_q = quantization_interval(vmax, r)
     vj, tj = uniform_midtread_quantizer(vmax, delta_q)
 
     # sample 2, page 101
     vmax = 1
     r = 20 / (2 * 5)
-    delta_q = (2 * vmax) / (np.power(2, r))
+    delta_q = quantization_interval(vmax, r)
     vj, tj = uniform_midrise_quantizer(vmax, delta_q)
 
     # sample 3, page 85, midrise
@@ -168,15 +168,19 @@ def sawtooth_signal():
     return y
 
 
+def vmax_calculation(signal):
+    return np.max(np.abs(signal))
+
+
 # signal = m(n)
 # mq: signal quantified = eq(n) + mp(n)
 def exercise_04():
     # a)
     signal = sawtooth_signal()
-    vmax = np.max(np.abs(signal))
+    vmax = vmax_calculation(signal)
     r = 3
 
-    delta_q = (2 * vmax) / (np.power(2, r))
+    delta_q = quantization_interval(vmax, r)
     vj, tj = uniform_midrise_quantizer(vmax, delta_q)
     mq, idx = quantize(signal, vmax, vj, tj)
 
@@ -204,7 +208,7 @@ def exercise_04():
     plt.show()
 
     # c)
-    px = np.sum(signal * signal) / len(signal)
+    px = signal_power(signal)
     r = np.arange(3, 9)
 
     snr_t = np.arange(len(r), dtype='float')
@@ -216,12 +220,16 @@ def exercise_04():
         mq, idx = quantize(signal, vmax, vj, tj)
 
         eq = signal - mq
-        pq = np.sum(eq * eq) / len(eq)
+        pq = signal_power(eq)
 
         snr_t[i] = snr_theoric(r[i], px, vmax)
         snr_p[i] = snr_pratic(px, pq)
 
     # TODO: Graph
+
+
+def signal_power(m):
+    return np.sum(np.power(m, 2) / len(m))
 
 
 def quantization_interval(v, r):
@@ -248,7 +256,7 @@ def exercise_05():
     # TODO
 
     # c)
-    vmax = np.max(np.abs(x))
+    vmax = vmax_calculation(x)
     px = np.sum(x, x) / len(x)
     r = np.arange(3, 9)
 
@@ -256,7 +264,7 @@ def exercise_05():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        delta_q = (2 * vmax) / (np.power(2, r[i]))
+        delta_q = quantization_interval(vmax, r[i])
         vj, tj = uniform_midtread_quantizer(vmax, delta_q)
         mq = quantize(x, vmax, vj, tj)
 
