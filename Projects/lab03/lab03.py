@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.6
 import lib.modulation as m
+import lib.channel as c
 import numpy as np
 
 
@@ -17,6 +18,9 @@ def ex():
     t = np.array([[1, 1, 1, 0], [0, 1, 1, 1]])
     l = m.line_code_manchester(t, 1, 8)
     a = m.adapted_filter(l, 0.5, 8)
+
+    vector = c.matrix_to_vector(t)
+    matrix = c.vector_to_matrix(vector, len(t[0]))
     print('')
 
 

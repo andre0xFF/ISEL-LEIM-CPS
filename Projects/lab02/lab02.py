@@ -6,6 +6,7 @@ import lib.quantization as q
 import lib.codification as c
 import lib.metrics as metrics
 import lib.error_control as error_control
+import lib.channel as channel
 
 
 def main():
@@ -114,7 +115,7 @@ def exercise_03():
     x = error_control.hamming(bin, P, n, r)
 
     # Simulate channel communication
-    y = channel(x, 0.01)
+    y = channel.send_with_binomial_noise(x, 0.01)
 
     # Measure the elapsed time to correct errors
     from time import time
@@ -125,21 +126,6 @@ def exercise_03():
 
     elapsed_time = time() - start_time
     print('3.    Error correction elapsed time: {:4.3f} s'.format(elapsed_time))
-
-
-def channel(x, ber):
-    x = np.copy(x)
-
-    # Generate error/noise to simulate channel communication
-    e = np.random.binomial(1, ber, len(x[0]) * len(x))
-    y = (np.ndarray.flatten(x) + e) % 2
-
-    # Build back the matrix from vector
-    col = len(x[0])
-    row = len(x)
-    y = np.reshape(y, (row, col))
-
-    return y
 
 
 def exercise_04():
@@ -182,7 +168,7 @@ def exercise_04():
 
     for i in range(len(ber_theoric)):
         # Channel simulation
-        y = channel(x, ber_theoric[i])
+        y = channel.send_with_binomial_noise(x, ber_theoric[i])
         ber_pratic[i, 0] = error_control.bit_error_rate(x, y)
 
         # Error correction
