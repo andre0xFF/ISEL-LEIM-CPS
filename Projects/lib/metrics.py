@@ -12,7 +12,7 @@ def snr_theoric(r: np.int, p: np.float, vmax: np.float) -> np.float:
     return 6.02 * r + 10 * np.log10(3 * p / np.power(vmax, 2))
 
 
-def snr_pratic(p_signal: np.ndarray, p_quantized: np.ndarray) -> np.float:
+def snr_pratic(p_signal: np.float, p_quantized: np.float) -> np.float:
     return 10 * np.log10(p_signal / p_quantized)
 
 

@@ -13,7 +13,7 @@ def send_with_binomial_noise(x: np.ndarray, ber: np.float) -> np.ndarray:
 
 
 # x: code line from digital modulation
-def send_with_awgn(x: np.ndarray, sigma: np.int) -> np.ndarray:
+def send_with_awgn(x: np.ndarray, sigma: np.float) -> np.ndarray:
     vector = matrix_to_vector(x)
 
     # Generate error/noise to simulate channel communication
