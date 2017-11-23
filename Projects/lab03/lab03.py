@@ -1,19 +1,23 @@
-#!/usr/bin/env python3
-import lab02.lab02 as lab02
+#!/usr/bin/env python3.6
+import lib.modulation as m
+import numpy as np
 
 
 def main():
-    exercise_01()
     exercise_02()
     exercise_03()
     exercise_04()
     exercise_05()
     exercise_06()
     exercise_07()
+    ex()
 
 
-def exercise_01():
-    pass
+def ex():
+    t = np.array([[1, 1, 1, 0], [0, 1, 1, 1]])
+    l = m.line_code_manchester(t, 1, 8)
+    a = m.adapted_filter(l, 0.5, 8)
+    print('')
 
 
 def exercise_02():
