@@ -1,17 +1,20 @@
 #!/usr/bin/env python3.6
 import lib.modulation as modulation
 import lib.channel as channel
+import lib.quantization
 import lib.quantization as quantization
 import lib.error_control as error_control
 import lib.codification as codification
+import lib.metrics as metrics
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def main():
-    exercise_05()
-    exercise_06()
+    # exercise_05()
+    # exercise_06()
     exercise_07()
+
 
 
 def exercise_05():
@@ -98,13 +101,43 @@ def exercise_06():
         # Quantization
         m2 = quantization.dequantize(vj, y4)
 
+        # Metrics
+        # TODO: BER
+        # TODO: SNR?
         plt.plot(m1)
         plt.plot(m2)
         plt.show()
 
+    # Metrics
+    snr = np.zeros(len(sigma))
+
+    px = metrics.signal_power(m1)
+    snr_theoric = lib.quantization.snr_theoric(r, px, vmax)
+
+    error = m1 - x1
+    pe = metrics.signal_power(error)
+    snr_pratic = lib.quantization.snr_pratic(px, pe)
+
+    print('')
+
 
 def exercise_07():
-    pass
+    roll_off = 0.5
+    no = 0.5 * (1 / np.power(10, 6)) * 2
+    att = 5
+    bt = 400 * 1000
+    ber_theoric = 1 / np.power(10, 5)
+
+    rb = bt / (1 + roll_off)
+
+    print('7. a) Max bit rate: {:8.2f} bits/s'.format(rb))
+
+    tb = 1 / rb
+    a = np.sqrt(no)
+
+    eb = a * tb
+
+    print('7. b) Energy per bit: {}'.format(eb))
 
 
 if __name__ == '__main__':

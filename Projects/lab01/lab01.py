@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.6
+import lib.quantization
 import lib.quantization as q
 import lib.metrics as metrics
 import numpy as np
@@ -170,8 +171,8 @@ def exercise_04():
         eq = signal - mq
         pq = metrics.signal_power(eq)
 
-        snr_t[i] = metrics.snr_theoric(r[i], px, vmax)
-        snr_p[i] = metrics.snr_pratic(px, pq)
+        snr_t[i] = lib.quantization.snr_theoric(r[i], px, vmax)
+        snr_p[i] = lib.quantization.snr_pratic(px, pq)
 
     # TODO: Graph
 
@@ -203,8 +204,8 @@ def exercise_05():
         eq = x - mq
         pq = np.sum(eq * eq) / len(eq)
 
-        snr_t = metrics.snr_theoric(r[i], px, vmax)
-        snr_p = metrics.snr_pratic(px, pq)
+        snr_t = lib.quantization.snr_theoric(r[i], px, vmax)
+        snr_p = lib.quantization.snr_pratic(px, pq)
 
     # TODO: Graphs and comments
 

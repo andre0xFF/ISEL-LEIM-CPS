@@ -33,11 +33,3 @@ def correction(y: np.ndarray, P: np.ndarray) -> np.ndarray:
         y[row, col] = np.logical_not(y[row, col])
 
     return y[:, 0:-1 * len(P[0])]
-
-
-def bit_error_rate(x: np.ndarray, y: np.ndarray) -> np.float:
-    return np.sum(np.array([x != y])) / len(x)
-
-
-def ber_after_error_correction(ber_before: np.float, n: np.int) -> np.float:
-    return (3 * (n - 1) / 2) * np.power(ber_before, 2)

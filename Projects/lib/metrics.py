@@ -5,16 +5,17 @@ def signal_power(x: np.ndarray) -> np.float:
     return np.sum(np.power(x, 2) / len(x))
 
 
-# r: number of bits
-# p: signal power
-# v: vmax
-def snr_theoric(r: np.int, p: np.float, vmax: np.float) -> np.float:
-    return 6.02 * r + 10 * np.log10(3 * p / np.power(vmax, 2))
-
-
-def snr_pratic(p_signal: np.float, p_quantized: np.float) -> np.float:
-    return 10 * np.log10(p_signal / p_quantized)
-
-
 def time_between_errors(rb: np.int, ber: np.float) -> np.float:
     return 1 / (rb * ber)
+
+
+def ber(x: np.ndarray, y: np.ndarray) -> np.float:
+    return np.sum(np.array([x != y])) / len(x)
+
+
+def ber_after_error_correction(ber_before: np.float, n: np.int) -> np.float:
+    return (3 * (n - 1) / 2) * np.power(ber_before, 2)
+
+
+def snr_reception(px, p_reception):
+    return px / p_reception

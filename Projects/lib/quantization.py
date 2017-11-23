@@ -59,3 +59,14 @@ def quantize(signal, vmax, vj, tj):
 
 def dequantize(vj, indexes):
     return vj[indexes]
+
+
+# r: number of bits
+# p: signal power
+# v: vmax
+def snr_theoric(r: np.int, p: np.float, vmax: np.float) -> np.float:
+    return 6.02 * r + 10 * np.log10(3 * p / np.power(vmax, 2))
+
+
+def snr_pratic(p_signal: np.float, p_quantized: np.float) -> np.float:
+    return 10 * np.log10(p_signal / p_quantized)

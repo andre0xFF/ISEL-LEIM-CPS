@@ -2,6 +2,7 @@
 import numpy as np
 import scipy.io.wavfile as wav
 import lab01.lab01 as lab01
+import lib.quantization
 import lib.quantization as q
 import lib.codification as c
 import lib.metrics as metrics
@@ -77,7 +78,7 @@ def exercise_02():
         wav.write(filename, fs, q.dequantize(vj, dec).astype('int16'))
 
         p = np.sum(m * m) / len(m)
-        snr[i] = metrics.snr_theoric(r[i], p, vmax)
+        snr[i] = lib.quantization.snr_theoric(r[i], p, vmax)
 
         print('2.    r = {:d}; SNR = {:>7.3f}'.format(r[i], snr[i]))
 
@@ -169,11 +170,11 @@ def exercise_04():
     for i in range(len(ber_theoric)):
         # Channel simulation
         y = channel.send_with_binomial_noise(x, ber_theoric[i])
-        ber_pratic[i, 0] = error_control.bit_error_rate(x, y)
+        ber_pratic[i, 0] = metrics.ber(x, y)
 
         # Error correction
         y = error_control.correction(y, P)
-        ber_pratic[i, 1] = error_control.bit_error_rate(bin, y)
+        ber_pratic[i, 1] = metrics.ber(bin, y)
 
         # Decode and Dequantize
         idx = c.pcm_decode(y)
@@ -184,7 +185,7 @@ def exercise_04():
         p_error = metrics.signal_power(e)
         p = metrics.signal_power(m)
 
-        snr[i] = metrics.snr_pratic(p, p_error)
+        snr[i] = lib.quantization.snr_pratic(p, p_error)
 
         print('4.    BERt = {:>6.2f}; BER = {:>6.3f}; BER\' = {:>6.3f}; SNR = {:>6.3f}'.format(
             ber_theoric[i], ber_pratic[i, 0], ber_pratic[i, 1], snr[i])
@@ -225,7 +226,7 @@ def exercise_06():
     n = 15
     k = 11
     ber_initial = 1 / np.power(10, 3)
-    ber_line = error_control.ber_after_error_correction(ber_initial, n)
+    ber_line = metrics.ber_after_error_correction(ber_initial, n)
 
     print('6. c) BER\' = {:9.7f}'.format(ber_line))
 

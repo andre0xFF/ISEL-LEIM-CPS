@@ -31,3 +31,13 @@ def vector_to_matrix(vector: np.ndarray, n: np.int) -> np.ndarray:
     row = np.int(len(vector) / n)
     col = n
     return np.reshape(vector, (row, col))
+
+
+def ber():
+    # TODO
+    pass
+
+
+def snr():
+    # TODO
+    pass
