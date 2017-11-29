@@ -11,10 +11,9 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    # exercise_05()
-    # exercise_06()
+    exercise_05()
+    exercise_06()
     exercise_07()
-
 
 
 def exercise_05():
@@ -81,19 +80,28 @@ def exercise_06():
     x3 = error_control.hamming(x2, P, n, r)
 
     # Digital modulation
-    x4 = modulation.manchester_enconde(x3, a=1)
+    a = 1
+    x4 = modulation.manchester_enconde(x3, a)
 
     # Channel
-    sigma = np.array([0.5, 1, 2, 4])
+    sigma_squared = np.array([0.5, 1, 2, 4])
 
-    for s in sigma:
-        y1 = channel.send_with_awgn(x4, sigma=s)
+    for s in sigma_squared:
+        y1 = channel.send_with_awgn(x4, np.sqrt(s))
 
         # Digital modulation
         y2 = modulation.adapted_filter(y1, lambda_=0)
 
         # Error control
         y3 = error_control.correction(y2, P)
+
+        # BER calculation
+        tb = len(x4)
+        eb = metrics.eb(a, tb)
+        no = s * 2
+
+        ber_pratic = metrics.ber(x3, y2)
+        ber_theoric = metrics.ber_manchester(eb, no)
 
         # Decoder
         y4 = codification.pcm_decode(y3)
@@ -102,14 +110,13 @@ def exercise_06():
         m2 = quantization.dequantize(vj, y4)
 
         # Metrics
-        # TODO: BER
         # TODO: SNR?
         plt.plot(m1)
         plt.plot(m2)
         plt.show()
 
     # Metrics
-    snr = np.zeros(len(sigma))
+    snr = np.zeros(len(sigma_squared))
 
     px = metrics.signal_power(m1)
     snr_theoric = lib.quantization.snr_theoric(r, px, vmax)
