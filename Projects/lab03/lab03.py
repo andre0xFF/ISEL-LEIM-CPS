@@ -1,5 +1,5 @@
 #!/usr/bin/env python3.6
-import lib.modulation as modulation
+import lib.digital_modulation as modulation
 import lib.channel as channel
 import lib.quantization
 import lib.quantization as quantization
@@ -26,7 +26,7 @@ def exercise_05():
     sigma = 1
     y1 = channel.send_with_awgn(x, sigma)
 
-    y2 = modulation.adapted_filter(y1, 0, p)
+    y2 = modulation.machester_decode(y1, 0, p)
 
     print('3. a) Bits at the emitter: {}'.format(msg))
     print('3. a) Line code (P = {}, A = {}): {}'.format(p, a, x))
@@ -37,7 +37,7 @@ def exercise_05():
 
     for s in sigma:
         y1 = channel.send_with_awgn(x, s)
-        y2 = modulation.adapted_filter(y1, 0, p)
+        y2 = modulation.machester_decode(y1, 0, p)
 
         print('3. b) Adapted filter result (Sigma = {}): {}'.format(s, y2))
 
@@ -90,7 +90,7 @@ def exercise_06():
         y1 = channel.send_with_awgn(x4, np.sqrt(s))
 
         # Digital modulation
-        y2 = modulation.adapted_filter(y1, lambda_=0)
+        y2 = modulation.machester_decode(y1, lambda_=0)
 
         # Error control
         y3 = error_control.correction(y2, P)
@@ -129,6 +129,7 @@ def exercise_06():
 
 
 def exercise_07():
+    # TODO
     roll_off = 0.5
     no = 0.5 * (1 / np.power(10, 6)) * 2
     att = 5
