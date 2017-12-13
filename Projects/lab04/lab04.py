@@ -48,7 +48,7 @@ def test():
 
     # ###
 
-    x = np.array([[1,1,0,1,1,0]])
+    x = np.array([[0,0,0,0],[1,0,1,1]])
     x4, new_bits = digital_modulation.qam_encode(x, p=8)
     x5 = digital_modulation.qam_decode(x4, p=8, rm_bits=new_bits)
 
