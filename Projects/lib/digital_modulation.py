@@ -155,4 +155,6 @@ def qam_decode(y: np.ndarray, p: np.int, rm_bits: np.int) -> np.ndarray:
         coords[:, i + 0] = phi_x
         coords[:, i + 1] = phi_y
 
+    coords = np.clip(coords, -3, 3)
+
     return constellation_decode(coords, rm_bits)

@@ -226,7 +226,7 @@ def exercise_06():
     n = 15
     k = 11
     ber_initial = 1 / np.power(10, 3)
-    ber_line = metrics.ber_after_error_correction(ber_initial, n)
+    ber_line = metrics.ber_hamming(ber_initial, n)
 
     print('6. c) BER\' = {:9.7f}'.format(ber_line))
 
