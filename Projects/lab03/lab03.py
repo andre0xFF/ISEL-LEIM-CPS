@@ -24,7 +24,7 @@ def exercise_05():
     x = modulation.manchester_enconde(msg, a, p)
 
     sigma = 1
-    y1 = channel.send_with_awgn(x, sigma)
+    y1 = channel.send_with_awgn(x, sigma=np.sqrt(sigma))
 
     y2 = modulation.machester_decode(y1, 0, p)
 
@@ -84,9 +84,9 @@ def exercise_06():
     x4 = modulation.manchester_enconde(x3, a)
 
     # Channel
-    sigma_squared = np.array([0.5, 1, 2, 4])
+    sigma = np.array([0.5, 1, 2, 4])
 
-    for s in sigma_squared:
+    for s in sigma:
         y1 = channel.send_with_awgn(x4, np.sqrt(s))
 
         # Digital modulation
@@ -116,14 +116,14 @@ def exercise_06():
         plt.show()
 
     # Metrics
-    snr = np.zeros(len(sigma_squared))
+    snr = np.zeros(len(sigma))
 
     px = metrics.signal_power(m1)
-    snr_theoric = lib.quantization.snr_theoric(r, px, vmax)
+    snr_theoric = lib.metrics.snr_theoric(r, px, vmax)
 
     error = m1 - x1
     pe = metrics.signal_power(error)
-    snr_pratic = lib.quantization.snr_pratic(px, pe)
+    snr_pratic = lib.metrics.snr_db(px, pe)
 
     print('')
 

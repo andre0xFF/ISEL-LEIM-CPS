@@ -78,7 +78,7 @@ def exercise_02():
         wav.write(filename, fs, q.dequantize(vj, dec).astype('int16'))
 
         p = np.sum(m * m) / len(m)
-        snr[i] = lib.quantization.snr_theoric(r[i], p, vmax)
+        snr[i] = lib.metrics.snr_theoric(r[i], p, vmax)
 
         print('2.    r = {:d}; SNR = {:>7.3f}'.format(r[i], snr[i]))
 
@@ -185,7 +185,7 @@ def exercise_04():
         p_error = metrics.signal_power(e)
         p = metrics.signal_power(m)
 
-        snr[i] = lib.quantization.snr_pratic(p, p_error)
+        snr[i] = lib.metrics.snr_db(p, p_error)
 
         print('4.    BERt = {:>6.2f}; BER = {:>6.3f}; BER\' = {:>6.3f}; SNR = {:>6.3f}'.format(
             ber_theoric[i], ber_pratic[i, 0], ber_pratic[i, 1], snr[i])

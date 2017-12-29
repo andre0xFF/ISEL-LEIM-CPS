@@ -26,5 +26,14 @@ def eb(a, tb):
     return np.power(a, 2) * tb
 
 
-def snr_reception(px: np.ndarray, py: np.ndarray):
+def snr(px: np.float, py: np.float) -> np.float:
     return px / py
+
+
+# snr_db == snr_theoric
+def snr_db(px: np.float, py: np.float) -> np.float:
+    return 10 * np.log10(px / py)
+
+
+def snr_theoric(r: np.int, p: np.float, vmax: np.float) -> np.float:
+    return 6.02 * r + 10 * np.log10(3 * p / np.power(vmax, 2))

@@ -171,8 +171,8 @@ def exercise_04():
         eq = signal - mq
         pq = metrics.signal_power(eq)
 
-        snr_t[i] = lib.quantization.snr_theoric(r[i], px, vmax)
-        snr_p[i] = lib.quantization.snr_pratic(px, pq)
+        snr_t[i] = lib.metrics.snr_theoric(r[i], px, vmax)
+        snr_p[i] = lib.metrics.snr_db(px, pq)
 
     # TODO: Graph
 
@@ -190,7 +190,8 @@ def exercise_05():
 
     # c)
     vmax = q.vmax(x)
-    px = np.sum(x, x) / len(x)
+    px = np.sum(x * x) / len(x)
+    px = lib.metrics.signal_power(x)
     r = np.arange(3, 9)
 
     snr_t = np.arange(len(r), dtype='float')
@@ -202,10 +203,10 @@ def exercise_05():
         mq = q.quantize(x, vmax, vj, tj)
 
         eq = x - mq
-        pq = np.sum(eq * eq) / len(eq)
+        pq = lib.metrics.signal_power(eq)
 
-        snr_t = lib.quantization.snr_theoric(r[i], px, vmax)
-        snr_p = lib.quantization.snr_pratic(px, pq)
+        snr_t = lib.metrics.snr_theoric(r[i], px, vmax)
+        snr_p = lib.metrics.snr_db(px, pq)
 
     # TODO: Graphs and comments
 
