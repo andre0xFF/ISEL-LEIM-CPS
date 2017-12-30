@@ -44,7 +44,7 @@ def exercise_01():
     vmax = q.vmax(signal)
     r = 3
 
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
     mq, idx = q.quantize(signal, vmax, vj, tj)
 
@@ -62,7 +62,7 @@ def exercise_02():
     snr = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        delta_q = q.interval(vmax, r[i])
+        delta_q = q.delta_q(vmax, r[i])
         vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
         mq, idx = q.quantize(m, vmax, vj, tj)
 
@@ -92,7 +92,7 @@ def exercise_03():
     m = lab01.sawtooth_signal()
 
     vmax = q.vmax(m)
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
     mq, idx = q.quantize(m, vmax, vj, tj)
 
@@ -140,7 +140,7 @@ def exercise_04():
     m = lab01.sawtooth_signal()
 
     vmax = q.vmax(m)
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
     mq, idx = q.quantize(m, vmax, vj, tj)
 
@@ -204,7 +204,7 @@ def exercise_05():
     r = 3
 
     vmax = q.vmax(m)
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
     mq, idx = q.quantize(m, vmax, vj, tj)
     x = c.pcm_encode(idx, r)

@@ -7,8 +7,9 @@ import numpy as np
 def manchester_enconde(x: np.ndarray, a: np.int, p: np.int=8) -> np.ndarray:
     lines = np.zeros(shape=(len(x), len(x[0]) * p), dtype=np.int32)
 
-    bit = lambda bit, n: np.hstack(((-1) * a * np.ones(n), a * np.ones(n))) if bit \
-        else np.hstack((a * np.ones(n), (-1) * a * np.ones(n)))
+    def bit(b, n):
+        return np.hstack(((-1) * a * np.ones(n), a * np.ones(n))) if b \
+            else np.hstack((a * np.ones(n), (-1) * a * np.ones(n)))
 
     for i in range(len(x)):
         for j in range(len(x[i])):
@@ -91,7 +92,10 @@ def constellation_encode(x: np.ndarray) -> (np.ndarray, np.int):
         return 2 * c + 1
 
     for i in range(0, len(coords[0]), 2):
+        # calc all signals of x and y
         signal = signal_calc(x[:, i * 2:i * 2 + 2])
+
+        # calc all values of coord x and y
         coord = coord_calc(x[:, i * 2 + 2:i * 2 + 4])
 
         coords[:, i:i + 2] = np.transpose(np.array([signal[:, 0] * coord[:, 1], signal[:, 1] * coord[:, 0]]))
@@ -124,12 +128,12 @@ def qam_encode(x: np.ndarray, p: np.int) -> (np.ndarray, np.int):
     symbols = np.zeros((len(coords), np.int(len(coords[0]) / 2 * p)), dtype=np.float32)
 
     for i in range(0, len(coords[0]), 2):
-        col1 = np.reshape(coords[:, i + 0], (len(coords), 1))
-        col2 = np.reshape(coords[:, i + 1], (len(coords), 1))
-        j = np.int(p / 2 * i)
+        col_x = np.reshape(coords[:, i + 0], (len(coords), 1))
+        col_y = np.reshape(coords[:, i + 1], (len(coords), 1))
 
-        symbols[:, j:j + p] = col1 * np.sqrt(2 / p) * np.cos(2 * np.pi * n * 1 / p) +\
-                              col2 * np.sqrt(2 / p) * np.sin(2 * np.pi * n * 1 / p)
+        j = np.int(p / 2 * i)
+        symbols[:, j:j + p] = col_x * np.sqrt(2 / p) * np.cos(2 * np.pi * n * 1 / p) +\
+                              col_y * np.sqrt(2 / p) * np.sin(2 * np.pi * n * 1 / p)
 
     return symbols, new_bits
 
@@ -145,10 +149,10 @@ def qam_decode(y: np.ndarray, p: np.int, rm_bits: np.int) -> np.ndarray:
 
     for i in range(0, len(coords[0]), 2):
         j = np.int(p / 2 * i)
-        bits = y[:, j:j + p]
+        symbols = y[:, j:j + p]
 
-        phi_x = np.sum(bits * c1, axis=1)
-        phi_y = np.sum(bits * c2, axis=1)
+        phi_x = np.sum(symbols * c1, axis=1)
+        phi_y = np.sum(symbols * c2, axis=1)
         phi_x = cell_round(phi_x)
         phi_y = cell_round(phi_y)
 

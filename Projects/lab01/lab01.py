@@ -80,13 +80,13 @@ def example():
     # sample 1, page 101
     vmax = 10
     r = 40 / (2 * 10)
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midtread_quantizer(vmax, delta_q)
 
     # sample 2, page 101
     vmax = 1
     r = 20 / (2 * 5)
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
 
     # sample 3, page 85, midrise
@@ -129,7 +129,7 @@ def exercise_04():
     vmax = q.vmax(signal)
     r = 3
 
-    delta_q = q.interval(vmax, r)
+    delta_q = q.delta_q(vmax, r)
     vj, tj = q.uniform_midrise_quantizer(vmax, delta_q)
     mq, idx = q.quantize(signal, vmax, vj, tj)
 
@@ -164,7 +164,7 @@ def exercise_04():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        delta_q = q.interval(vmax, r[i])
+        delta_q = q.delta_q(vmax, r[i])
         vj, tj = q.uniform_midtread_quantizer(vmax, delta_q)
         mq, idx = q.quantize(signal, vmax, vj, tj)
 
@@ -198,7 +198,7 @@ def exercise_05():
     snr_p = np.arange(len(r), dtype='float')
 
     for i in range(len(r)):
-        delta_q = q.interval(vmax, r[i])
+        delta_q = q.delta_q(vmax, r[i])
         vj, tj = q.uniform_midtread_quantizer(vmax, delta_q)
         mq = q.quantize(x, vmax, vj, tj)
 

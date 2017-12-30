@@ -26,7 +26,7 @@ def pcm_encode(idx: np.ndarray, r: np.int) -> np.ndarray:
 
 
 def pcm_decode(bits: np.ndarray) -> np.ndarray:
-    return bits.dot(1 << np.arange(bits.shape[-1] - 1, -1, -1))
+    return bits.dot(1 << np.arange(len(bits[0]) - 1, -1, -1))
 
 
 def gray_encode(idx, r):

@@ -55,7 +55,7 @@ def exercise_06():
     m1 = lab01.sawtooth_signal()
 
     vmax = quantization.vmax(m1)
-    delta_q = quantization.interval(vmax, r)
+    delta_q = quantization.delta_q(vmax, r)
     vj, tj = quantization.uniform_midrise_quantizer(vmax, delta_q)
     x1, idx = quantization.quantize(m1, vmax, vj, tj)
 
@@ -84,9 +84,9 @@ def exercise_06():
     x4 = modulation.manchester_enconde(x3, a)
 
     # Channel
-    sigma = np.array([0.5, 1, 2, 4])
+    sigma_squared = np.array([0.5, 1, 2, 4])
 
-    for s in sigma:
+    for s in sigma_squared:
         y1 = channel.send_with_awgn(x4, np.sqrt(s))
 
         # Digital modulation
@@ -96,12 +96,13 @@ def exercise_06():
         y3 = error_control.correction(y2, P)
 
         # BER calculation
+        # TODO: tb = len(x4[0]) ?
         tb = len(x4)
-        eb = metrics.eb(a, tb)
-        no = s * 2
+        eb = metrics.eb_manchester(a, tb)
+        n0 = s * 2
 
         ber_pratic = metrics.ber(x3, y2)
-        ber_theoric = metrics.ber_manchester(eb, no)
+        ber_theoric = metrics.ber_manchester(eb, n0)
 
         # Decoder
         y4 = codification.pcm_decode(y3)
@@ -116,7 +117,7 @@ def exercise_06():
         plt.show()
 
     # Metrics
-    snr = np.zeros(len(sigma))
+    # snr = np.zeros(len(sigma_squared))
 
     px = metrics.signal_power(m1)
     snr_theoric = lib.metrics.snr_theoric(r, px, vmax)

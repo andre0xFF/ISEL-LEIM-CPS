@@ -20,8 +20,8 @@ def uniform_midrise_quantizer(vmax, delta_q):
     return vj, tj
 
 
-def interval(v, r):
-    return (2 * v) / (np.power(2, r))
+def delta_q(vmax, r):
+    return (2 * vmax) / (np.power(2, r))
 
 
 def vmax(signal: np.ndarray) -> np.float:
