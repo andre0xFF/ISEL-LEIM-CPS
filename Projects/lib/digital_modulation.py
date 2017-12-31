@@ -122,7 +122,7 @@ def constellation_decode(y: np.ndarray, rm_bits: np.int) -> np.ndarray:
     return bits
 
 
-def qam_encode(x: np.ndarray, p: np.int) -> (np.ndarray, np.int):
+def qam_encode(x: np.ndarray, p: np.int) -> (np.ndarray, np.ndarray, np.int):
     coords, new_bits = constellation_encode(x)
     n = np.reshape(np.arange(p), (1, p))
     symbols = np.zeros((len(coords), np.int(len(coords[0]) / 2 * p)), dtype=np.float32)
@@ -135,30 +135,31 @@ def qam_encode(x: np.ndarray, p: np.int) -> (np.ndarray, np.int):
         symbols[:, j:j + p] = col_x * np.sqrt(2 / p) * np.cos(2 * np.pi * n * 1 / p) +\
                               col_y * np.sqrt(2 / p) * np.sin(2 * np.pi * n * 1 / p)
 
-    return symbols, new_bits
+    return symbols, coords, new_bits
 
 
-def qam_decode(y: np.ndarray, p: np.int, rm_bits: np.int) -> np.ndarray:
+def qam_decode(y: np.ndarray, p: np.int, rm_bits: np.int) -> (np.ndarray, np.ndarray):
     n = np.reshape(np.arange(p), (1, p))
     c1 = np.sqrt(2 / p) * np.cos(2 * np.pi * n * 1 / p)
     c2 = np.sqrt(2 / p) * np.sin(2 * np.pi * n * 1 / p)
-    coords = np.zeros((len(y), np.int(len(y[0]) * 2 / p)))
+    coords_r = np.zeros((len(y), np.int(len(y[0]) * 2 / p)))
+    coords_p = np.zeros((len(y), np.int(len(y[0]) * 2 / p)))
 
     def cell_round(c):
         return 2 * np.ceil(c / 2) - 1
 
-    for i in range(0, len(coords[0]), 2):
+    for i in range(0, len(coords_r[0]), 2):
         j = np.int(p / 2 * i)
         symbols = y[:, j:j + p]
 
         phi_x = np.sum(symbols * c1, axis=1)
         phi_y = np.sum(symbols * c2, axis=1)
-        phi_x = cell_round(phi_x)
-        phi_y = cell_round(phi_y)
 
-        coords[:, i + 0] = phi_x
-        coords[:, i + 1] = phi_y
+        coords_p[:, i + 0] = phi_x
+        coords_p[:, i + 1] = phi_y
+        coords_r[:, i + 0] = cell_round(phi_x)
+        coords_r[:, i + 1] = cell_round(phi_y)
 
-    coords = np.clip(coords, -3, 3)
+    coords_r = np.clip(coords_r, -3, 3)
 
-    return constellation_decode(coords, rm_bits)
+    return constellation_decode(coords_r, rm_bits), coords_r, coords_p
