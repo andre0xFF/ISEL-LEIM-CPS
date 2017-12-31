@@ -23,7 +23,7 @@ def super_mario_intro(variation_name):
 def sawtooth_signal():
     from lab01 import lab01
     m1 = lab01.sawtooth_signal()
-    return m1
+    return m1, 0, 'sawtooth_{}.wav'
 
 
 def exercise():
@@ -34,6 +34,7 @@ def exercise():
     # quantization
     m1, fs, filename = super_mario_intro('3sec')
     # m1, fs, filename = test_wav()
+    # m1, fs, filename = sawtooth_signal()
 
     filename = 'lab04/{}'.format(filename)
 
@@ -69,13 +70,15 @@ def exercise():
     # channel
     sigma_square = np.array([0.05, 0.1, 0.15, 0.2])
 
-    received_signals = np.zeros(shape=(len(m1), 4))
-
     snr_channel = np.zeros(len(sigma_square))
     snr_reception = np.zeros(len(sigma_square))
 
     ber_bc = np.zeros(len(sigma_square))
     ber_ac = np.zeros(len(sigma_square))
+
+    fig_signal = plt.figure(1)
+    fig_received_signal = plt.figure(2, figsize=(12, 10))
+    fig_constellation = plt.figure(3, figsize=(12, 10))
 
     for i in range(len(sigma_square)):
         y1 = channel.send_with_awgn(x4, sigma=np.sqrt(sigma_square[i]))
@@ -96,9 +99,11 @@ def exercise():
         wav.write(filename.format(sigma_square[i]), fs, m2.astype('int16'))
 
         # metrics
-        received_signals[:, i] = m2
+        ax_received_signal = fig_received_signal.add_subplot(2, 2, i + 1)
+        ax_constellation = fig_constellation.add_subplot(2, 2, i + 1)
 
-        constellation_graph(coords_o, coords_p, coords_r, sigma_square[i])
+        signal_graph(ax_received_signal, m2, sigma_square[i])
+        constellation_graph(ax_constellation, coords_o, coords_p, coords_r, sigma_square[i])
 
         p_x4 = metrics.signal_power(x4)
         p_y1 = metrics.signal_power(y1)
@@ -109,46 +114,47 @@ def exercise():
         snr_reception[i] = metrics.snr(p_m1, p_m2)
 
         ber_bc[i] = metrics.ber(x3, y2)
+        ber_ac[i] = metrics.ber(x2, y3)
 
     # metrics
-    plt.title('Transmitted signal')
-    plt.xlabel('time')
-    plt.ylabel('amplitude')
-    plt.plot(m1)
-    plt.show()
+    ax_signal = fig_signal.add_subplot(1, 1, 1)
+    ax_signal.set_title('Transmitted signal')
+    ax_signal.set_xlabel('time')
+    ax_signal.set_ylabel('amplitude')
+    ax_signal.plot(m1)
 
-    plt.figure(figsize=(12, 10))
-    plt.suptitle('Received signal')
-
-    for i in range(len(sigma_square)):
-        plt.subplot(2, 2, i + 1)
-        plt.plot(received_signals[:, i])
-        plt.title('AWGN ' r'$\sigma={}$'.format(sigma_square[i]))
-        plt.xlabel('time')
-        plt.ylabel('amplitude')
+    fig_received_signal.suptitle('Received signal')
+    fig_constellation.suptitle('16-QAM constellation')
 
     plt.tight_layout()
     plt.show()
 
 
-def constellation_graph(original_coords: np.ndarray, predicted_coords: np.ndarray, rounded_predicted_coords: np.ndarray, sigma: np.int):
-    # cell's core
+def signal_graph(ax, m: np.ndarray, sigma: np.float):
+    ax.plot(m)
+    ax.set_title('AWGN ' r'$\sigma={}$'.format(sigma))
+    ax.set_xlabel('time')
+    ax.set_ylabel('amplitude')
+
+
+def constellation_graph(ax, original_coords: np.ndarray, predicted_coords: np.ndarray, rounded_predicted_coords: np.ndarray, sigma: np.int):
+    # cells' core
     cell_core_x = np.arange(-3, 4, 2)
     cell_core_x = np.hstack((cell_core_x, cell_core_x, cell_core_x, cell_core_x))
     cell_core_y = np.hstack((np.ones(4), np.ones(4) * 3, np.ones(4) * -1, np.ones(4) * -3))
 
-    plt.scatter(
+    ax.scatter(
         cell_core_x,
         cell_core_y,
         s=10, label=['cell core']
     )
 
-    # cell's lines
+    # cells' lines
     line_x = np.array([-4, 4, 0, 0, -4, 4, -4, 4, -2, -2, 2, 2])
     line_y = np.array([0, 0, -4, 4, 2, 2, -2, -2, -4, 4, -4, 4])
 
     for i in range(0, len(line_x), 2):
-        plt.plot([line_x[i], line_x[i + 1]], [line_y[i], line_y[i + 1]], '--', linewidth=1, color=(0.5, 0.5, 0.5))
+        ax.plot([line_x[i], line_x[i + 1]], [line_y[i], line_y[i + 1]], '--', linewidth=1, color=(0.5, 0.5, 0.5))
 
     # coordinates
     plt_coords = original_coords != rounded_predicted_coords
@@ -158,22 +164,22 @@ def constellation_graph(original_coords: np.ndarray, predicted_coords: np.ndarra
         plt_coords[:, i + 1] = plt_coords[:, i]
 
     # well classified coordinates
-    plt.scatter(
+    ax.scatter(
         predicted_coords[np.logical_not(plt_coords)][0::2],
         predicted_coords[np.logical_not(plt_coords)][1::2],
         s=0.5, c=(0.9, 0.9, 0.9), alpha=0.05
     )
 
     # badly classified coordinates
-    plt.scatter(
+    ax.scatter(
         predicted_coords[plt_coords][0::2],
         predicted_coords[plt_coords][1::2],
         s=1, c=(1, 0, 0)
     )
 
-    # TODO: Add title and points subtitle in scatter plot
-
-    plt.show()
+    ax.set_xticks(np.arange(-4, 5))
+    ax.set_yticks(np.arange(-4, 5))
+    ax.set_title(r'$\sigma={}$'.format(sigma))
 
 
 if __name__ == '__main__':
