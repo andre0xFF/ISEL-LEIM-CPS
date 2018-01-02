@@ -126,8 +126,21 @@ def exercise():
     fig_received_signal.suptitle('Received signal')
     fig_constellation.suptitle('16-QAM constellation')
 
+    fig_ber_snr = plt.figure(4)
+    ber_snr_graph(fig_ber_snr.add_subplot(1, 1, 1), ber_ac, ber_bc, snr_channel, snr_reception, sigma_square)
+
     plt.tight_layout()
     plt.show()
+
+
+def ber_snr_graph(ax, ber_ac: np.ndarray, ber_bc: np.ndarray, snr_channel: np.ndarray, snr_reception: np.ndarray, sigma: np.ndarray):
+    ax.plot(sigma, ber_ac, label='BER ac')
+    ax.plot(sigma, ber_bc, label='BER bc')
+    ax.plot(sigma, snr_channel, label='SNR channel')
+    ax.plot(sigma, snr_reception, label='SNR reception')
+    ax.set_xticks(sigma)
+    ax.set_xlabel('AWGN ' r'$\sigma$')
+    ax.legend()
 
 
 def signal_graph(ax, m: np.ndarray, sigma: np.float):
