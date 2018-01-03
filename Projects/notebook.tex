@@ -280,52 +280,365 @@
     
 
     
+    \section{Indice}\label{indice}
+
+Section \ref{introducao}
+
+Section \ref{desenvolvimento}
+
+Section \ref{resultados}
+
+Section \ref{conclusoes}
+
+Section \ref{bibliografia}
+
     \section{Introducao}\label{introducao}
 
-\begin{itemize}
-\tightlist
-\item
-  Falar no que vai ser abordado
-\item
-  Transmissao e recepcao de sinal atraves de um canal
-\item
-  Conceitos gerais
-\item
-  Introducao de cada bloco
-\end{itemize}
+A transmissao de sinal e' o processo de enviar e propagar um sinal
+analogico ou digital atraves de cabo, fibra optica, \emph{wireless} ou
+outro meio de transmissao. Um exemplo de transmissao e' uma chamada
+telefonica ou o envio de um e-mail. Tipicamente a transmissao de
+informacao e' realizada de forma digital e veio substituir a transmissao
+de sinais analogicos, isto porque um sinal analogico nao pode ser limpo
+e sofre degradacao em longas distancias, um repetidor analogico pode
+amplificar o sinal mas ira tambem amplificar o seu ruido. Os sinais
+digitais podem ser reconstruidos com menor ruido e regenerado para o seu
+estado original. Estas sao algumas das razoes principais da transmissao
+de sinais digitais em grandes distancias por parte das empresas de
+telecomunicacoes.
+
+A conversao de analogico para digital e' realizada em tres etapas: A
+\textbf{amostragem} que tem como objectivo tornar o sinal discreto no
+dominio do tempo e nao envolve perda de informacao respeitando o teorema
+de \emph{Nyquist} cuja frequencia do sinal amostrado tem de ser duas
+vezes superior a' do sinal original; A \textbf{quantificacao} que torna
+as amostras do sinal discretas na amplitude, transformando uma variavel
+continua num numero finito de valores; A \textbf{codificacao} que
+atribui a cada amplitude de pulso um codigo binario.
+
+O \textbf{controlo de erros} tem como objectivo a deteccao e correccao
+de erros, devido a estarmos perante um sinal digital este processo da-se
+ao nivel dos codigos binarios do sinal. Existem dois tipos de erros de
+bit: os erros devido aos efeitos do canal de natureza aleatoria; e os
+erros devido a inteferencias electromagneticas em rajada. Dependendo do
+tipo de erros existem estrategias diferenciadas para, no receptor, os
+detectar ou mesmo corrigir. Para que seja possivel realizar este
+processo e' necessario introduzir bits com informacao relativa ao
+controlo de erros.
+
+A \textbf{modelacao digital} e' o processo no qual a informacao
+transmitida numa comunicacao e' adicionada ao sinal electromagnetico. O
+transmissor adiciona a informacao numa onda especial de tal forma que
+podera ser recuparada no receptor atraves de um processo reverso chamado
+desmodulacao.
+
+O \textbf{canal} e' meramente o meio utilizado para transmitir o sinal
+do transmissor ao receptor. Pode ser um par de condutores, um cabo
+coaxial, uma banda de frequencias de radio, um feixe de luz, etc.
+
+\begin{figure}
+\centering
+\includegraphics{https://preview.ibb.co/eKoeuw/Screenshot_from_2018_01_02_19_00_46.png}
+\caption{Envio e recepcao de informacao}
+\end{figure}
 
     \section{Desenvolvimento}\label{desenvolvimento}
 
-\begin{itemize}
-\tightlist
-\item
-  Explicar como o codigo foi dividido / biblioteca
-\item
-  Explicar detalhadamente a funcionalidade e os algoritmos envolvidos em
-  cada bloco
-\end{itemize}
+A transmissao de sinal e' dividida em varios blocos, a quantizacao,
+codificacao, o controlo de erros, a modulacao digital e o envio pelo
+canal. No receptor da-se o mesmo processo de forma invertida em cada
+bloco. Assim foi construida um biblioteca para isolar o codigo de cada
+bloco em diferentes ficheiros.
+
+A \textbf{quantificacao} de um sinal e' o processo que converte um sinal
+amostrado, num sinal com valores tambem discretos em amplitude. Para
+quantificar um sinal aproxima-se cada valor atraves de um metodo que
+atribui os valores de quantificacao \texttt{vj}, para tal usam-se
+valores de decisao \texttt{tj} equidistantes que serve de fronteira
+entre valores de quantificacao.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{uniform_midrise_quantizer(vmax, delta_q):}
+    \NormalTok{vj }\OperatorTok{=} \NormalTok{np.arange(}\OperatorTok{-}\DecValTok{1} \OperatorTok{*} \NormalTok{vmax }\OperatorTok{+} \NormalTok{delta_q }\OperatorTok{/} \DecValTok{2}\NormalTok{, vmax, delta_q)}
+    \NormalTok{tj }\OperatorTok{=} \NormalTok{np.arange(}\OperatorTok{-}\DecValTok{1} \OperatorTok{*} \NormalTok{vmax }\OperatorTok{+} \NormalTok{delta_q, vmax, delta_q)}
+
+    \ControlFlowTok{return} \NormalTok{vj, tj}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{quantize(signal, vmax, vj, tj):}
+    \NormalTok{tj }\OperatorTok{=} \NormalTok{np.insert(tj, }\BuiltInTok{len}\NormalTok{(tj), vmax)}
+
+    \CommentTok{# majorate mq array as default value}
+    \NormalTok{mq }\OperatorTok{=} \NormalTok{np.ones(}\BuiltInTok{len}\NormalTok{(signal)) }\OperatorTok{*} \NormalTok{np.}\BuiltInTok{max}\NormalTok{(vj)}
+
+    \CommentTok{# majorate the index as default value}
+    \NormalTok{idx }\OperatorTok{=} \NormalTok{np.ones(}\BuiltInTok{len}\NormalTok{(signal), dtype}\OperatorTok{=}\StringTok{'uint32'}\NormalTok{) }\OperatorTok{*} \BuiltInTok{len}\NormalTok{(vj)}
+
+    \CommentTok{# loop every point in the signal and check if the point is lower or equal}
+    \CommentTok{# than any tj elements (decision values)}
+    \ControlFlowTok{for} \NormalTok{i }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\BuiltInTok{len}\NormalTok{(signal)):}
+        \BuiltInTok{eval} \OperatorTok{=} \NormalTok{signal[i] }\OperatorTok{<=} \NormalTok{tj}
+
+        \CommentTok{# test whether any array element along a given axis evaluates to True}
+        \ControlFlowTok{if} \NormalTok{np.}\BuiltInTok{any}\NormalTok{(}\BuiltInTok{eval}\NormalTok{):}
+            \NormalTok{xq_value }\OperatorTok{=} \NormalTok{vj[}\BuiltInTok{eval}\NormalTok{][}\DecValTok{0}\NormalTok{]}
+            \NormalTok{mq[i] }\OperatorTok{=} \NormalTok{xq_value}
+
+            \CommentTok{# get the index}
+            \NormalTok{k }\OperatorTok{=} \NormalTok{np.nonzero(}\BuiltInTok{eval}\NormalTok{)[}\DecValTok{0}\NormalTok{][}\DecValTok{0}\NormalTok{]}
+            \NormalTok{idx[i] }\OperatorTok{=} \NormalTok{k}
+
+    \ControlFlowTok{return} \NormalTok{mq, idx}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{dequantize(vj, indexes):}
+    \ControlFlowTok{return} \NormalTok{vj[indexes]}
+\end{Highlighting}
+\end{Shaded}
+
+    \begin{quote}
+\textbf{Exercicio resolvido 3 da sebenta (parte 1, pag. 86)}
+\end{quote}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}29}]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+         \PY{k+kn}{from} \PY{n+nn}{lib} \PY{k}{import} \PY{n}{quantization}
+         
+         \PY{c+c1}{\PYZsh{} quantificar sinais ate 1v}
+         \PY{n}{vmax} \PY{o}{=} \PY{l+m+mi}{1}
+         
+         \PY{c+c1}{\PYZsh{} 8 intervalos de quantificacao}
+         \PY{n}{l} \PY{o}{=} \PY{l+m+mi}{8}
+         
+         \PY{c+c1}{\PYZsh{} intervalo de quantificacao}
+         \PY{n}{delta\PYZus{}q} \PY{o}{=} \PY{l+m+mi}{2} \PY{o}{*} \PY{n}{v} \PY{o}{/} \PY{n}{l}
+         
+         \PY{n}{vj}\PY{p}{,} \PY{n}{tj} \PY{o}{=} \PY{n}{quantization}\PY{o}{.}\PY{n}{uniform\PYZus{}midrise\PYZus{}quantizer}\PY{p}{(}\PY{n}{vmax}\PY{p}{,} \PY{n}{delta\PYZus{}q}\PY{p}{)}
+         
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Valores de quantificacao:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{vj}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Valores de decisao:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{tj}\PY{p}{)}\PY{p}{)}
+         
+         \PY{n}{n} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{arange}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{8}\PY{p}{)}
+         \PY{n}{m} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sin}\PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{pi} \PY{o}{*} \PY{l+m+mi}{1300} \PY{o}{/} \PY{l+m+mi}{8000} \PY{o}{*} \PY{n}{n}\PY{p}{)}
+         \PY{n}{r} \PY{o}{=} \PY{l+m+mi}{3}
+         
+         \PY{n}{x1}\PY{p}{,} \PY{n}{idx} \PY{o}{=} \PY{n}{quantization}\PY{o}{.}\PY{n}{quantize}\PY{p}{(}\PY{n}{m}\PY{p}{,} \PY{n}{vmax}\PY{p}{,} \PY{n}{vj}\PY{p}{,} \PY{n}{tj}\PY{p}{)}
+         
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Quantizacao:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{x1}\PY{p}{)}\PY{p}{)}
+         
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Dequantizacao:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{quantization}\PY{o}{.}\PY{n}{dequantize}\PY{p}{(}\PY{n}{vj}\PY{p}{,} \PY{n}{idx}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Valores de quantificacao:
+[-0.875 -0.625 -0.375 -0.125  0.125  0.375  0.625  0.875]
+
+Valores de decisao:
+[-0.75 -0.5  -0.25  0.    0.25  0.5   0.75]
+
+Quantizacao:
+[-0.125  0.875  0.875  0.125 -0.875 -0.875 -0.125  0.875]
+
+Dequantizacao:
+[-0.125  0.875  0.875  0.125 -0.875 -0.875 -0.125  0.875]
+
+
+    \end{Verbatim}
+
+    A \textbf{codificacao} e' a representacao binaria da sequencia de
+valores de um sinal, onde cada valor e' exprimido atraves de um codigo
+binario. A esta codificacao chama-se de modulacao por codigo de pulso
+(PCM - \emph{Pulse Code Modulation}). Os indices obtidos no bloco de
+quantizacao sao convertidos para o seu respectivo valor binario com uma
+representacao a \texttt{r} bits.
+
+O numero de bits representados na codificacao de cada numero e' variavel
+em cada problema, entao assumiu-se que o tamanho maximo desta
+representacao pode ter um maximo de 32 bits. Para optimizar esta
+conversao foi utilizada a funcao
+\href{https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.unpackbits.html}{\texttt{unpackbits()}}
+do numpy que converte numeros inteiros de 8 bits. Assim foi criado um
+novo tipo de dados que inclui 4 parcelas de numeros a 8 bits, perfazendo
+os 32 bits definidos.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{pcm_encode(idx: np.ndarray, r: np.}\BuiltInTok{int}\NormalTok{) }\OperatorTok{->} \NormalTok{np.ndarray:}
+    \CommentTok{# new data type to divide an int32 variable into 4 int8 variables}
+    \NormalTok{dt }\OperatorTok{=} \NormalTok{np.dtype((np.int32, \{}\StringTok{'f0'}\NormalTok{: (np.uint8, }\DecValTok{3}\NormalTok{), }\StringTok{'f1'}\NormalTok{: (np.uint8, }\DecValTok{2}\NormalTok{), }\StringTok{'f2'}\NormalTok{: (np.uint8, }\DecValTok{1}\NormalTok{), }\StringTok{'f3'}\NormalTok{: (np.uint8, }\DecValTok{0}\NormalTok{)\}))}
+
+    \CommentTok{# convert the vector into new data type}
+    \NormalTok{idx_uint8 }\OperatorTok{=} \NormalTok{idx.view(dtype}\OperatorTok{=}\NormalTok{dt)}
+
+    \CommentTok{# pack an numpy array with the 4 uint8 variables}
+    \NormalTok{idx_uint8 }\OperatorTok{=} \NormalTok{np.array([idx_uint8[}\StringTok{'f0'}\NormalTok{], idx_uint8[}\StringTok{'f1'}\NormalTok{], idx_uint8[}\StringTok{'f2'}\NormalTok{], idx_uint8[}\StringTok{'f3'}\NormalTok{]])}
+
+    \CommentTok{# transpose so we get each number by row}
+    \NormalTok{idx_uint8 }\OperatorTok{=} \NormalTok{np.transpose(idx_uint8)}
+
+    \CommentTok{# convert to binary}
+    \NormalTok{idx_bin }\OperatorTok{=} \NormalTok{np.unpackbits(idx_uint8, axis}\OperatorTok{=}\DecValTok{1}\NormalTok{)}
+
+    \CommentTok{# slice into the desired number of bits}
+    \NormalTok{idx_bin }\OperatorTok{=} \NormalTok{idx_bin[:, }\BuiltInTok{len}\NormalTok{(idx_bin[}\DecValTok{0}\NormalTok{]) }\OperatorTok{-} \NormalTok{r:}\BuiltInTok{len}\NormalTok{(idx_bin[}\DecValTok{0}\NormalTok{])]}
+
+    \ControlFlowTok{return} \NormalTok{idx_bin}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{pcm_decode(bits: np.ndarray) }\OperatorTok{->} \NormalTok{np.ndarray:}
+    \ControlFlowTok{return} \NormalTok{bits.dot(}\DecValTok{1} \OperatorTok{<<} \NormalTok{np.arange(}\BuiltInTok{len}\NormalTok{(bits[}\DecValTok{0}\NormalTok{]) }\OperatorTok{-} \DecValTok{1}\NormalTok{, }\OperatorTok{-}\DecValTok{1}\NormalTok{, }\OperatorTok{-}\DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}32}]:} \PY{k+kn}{from} \PY{n+nn}{lib} \PY{k}{import} \PY{n}{codification}
+         
+         \PY{n}{x2} \PY{o}{=} \PY{n}{codification}\PY{o}{.}\PY{n}{pcm\PYZus{}encode}\PY{p}{(}\PY{n}{idx}\PY{p}{,} \PY{n}{r}\PY{p}{)}
+         
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Indices de quantizacao:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{idx}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Codificacao:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{x2}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{A sequencia binaria a ser transmitida corresponde a concatenacao }\PY{l+s+s1}{\PYZsq{}} \PYZbs{}
+               \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{por ordem temporal dos codigos em binario:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{ndarray}\PY{o}{.}\PY{n}{flatten}\PY{p}{(}\PY{n}{x2}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Descodificacao de bits:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{codification}\PY{o}{.}\PY{n}{pcm\PYZus{}decode}\PY{p}{(}\PY{n}{x2}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Indices de quantizacao:
+[3 7 7 4 0 0 3 7]
+
+Codificacao:
+[[0 1 1]
+ [1 1 1]
+ [1 1 1]
+ [1 0 0]
+ [0 0 0]
+ [0 0 0]
+ [0 1 1]
+ [1 1 1]]
+
+A sequencia binaria a ser transmitida corresponde a concatenacao por ordem temporal dos codigos em binario:
+[0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1]
+
+Descodificacao de bits:
+[3 7 7 4 0 0 3 7]
+
+
+    \end{Verbatim}
+
+    O \textbf{controlo de erros} atraves do codigo de Hamming consegue
+corrigir 1 bit ou detectar 2 bits errados na messagem. Este processo
+implica a adicao de bits de paridade a' mensagem para serem utilizados
+na correcao.
+
+A correcao e' realizada pelo calculo do sindroma da mensagem que
+corresponde ao indice da matrix \texttt{H} e ao indice da mensagem a ser
+corrigido.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{hamming(x: np.ndarray, P: np.ndarray, n: np.}\BuiltInTok{int}\NormalTok{, r: np.}\BuiltInTok{int}\NormalTok{) }\OperatorTok{->} \NormalTok{np.ndarray:}
+    \NormalTok{G }\OperatorTok{=} \NormalTok{np.hstack((np.identity(r, dtype}\OperatorTok{=}\StringTok{'uint8'}\NormalTok{), P))}
+
+    \ControlFlowTok{return} \NormalTok{np.dot(x, G) }\OperatorTok{%} \DecValTok{2}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def} \NormalTok{correction(y: np.ndarray, P: np.ndarray) }\OperatorTok{->} \NormalTok{np.ndarray:}
+    \CommentTok{# form the H matrix}
+    \NormalTok{H }\OperatorTok{=} \NormalTok{np.vstack((P, np.identity(}\BuiltInTok{len}\NormalTok{(P[}\DecValTok{0}\NormalTok{]))))}
+
+    \CommentTok{# calculate the S matrix}
+    \NormalTok{S }\OperatorTok{=} \NormalTok{np.dot(y, H) }\OperatorTok{%} \DecValTok{2}
+
+    \CommentTok{# if S is == 0 then there's no error in that sub-message}
+    \CommentTok{# else find the row position where sub-message is equal to S}
+    \CommentTok{# then flip the bit in the sub-message at row position}
+    \ControlFlowTok{for} \NormalTok{row }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\BuiltInTok{len}\NormalTok{(S)):}
+        \ControlFlowTok{if} \NormalTok{np.}\BuiltInTok{all}\NormalTok{(S[row] }\OperatorTok{==} \DecValTok{0}\NormalTok{):}
+            \ControlFlowTok{continue}
+
+        \NormalTok{col }\OperatorTok{=} \NormalTok{np.argwhere(np.}\BuiltInTok{all}\NormalTok{(H }\OperatorTok{==} \NormalTok{S[row], axis}\OperatorTok{=}\DecValTok{1}\NormalTok{))[}\DecValTok{0}\NormalTok{][}\DecValTok{0}\NormalTok{]}
+        \NormalTok{y[row, col] }\OperatorTok{=} \NormalTok{np.logical_not(y[row, col])}
+
+    \ControlFlowTok{return} \NormalTok{y[:, }\DecValTok{0}\NormalTok{:}\OperatorTok{-}\DecValTok{1} \OperatorTok{*} \BuiltInTok{len}\NormalTok{(P[}\DecValTok{0}\NormalTok{])]}
+\end{Highlighting}
+\end{Shaded}
+
+    \begin{quote}
+\textbf{Exercicio resolvido em aula}
+\end{quote}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}40}]:} \PY{k+kn}{from} \PY{n+nn}{lib} \PY{k}{import} \PY{n}{error\PYZus{}control}
+         
+         \PY{c+c1}{\PYZsh{} mensagem}
+         \PY{n}{m} \PY{o}{=} \PY{p}{[}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{]}
+         
+         \PY{c+c1}{\PYZsh{} matriz paridade}
+         \PY{n}{p} \PY{o}{=} \PY{p}{[}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{]}
+         
+         \PY{n}{n} \PY{o}{=} \PY{l+m+mi}{7}
+         \PY{n}{k} \PY{o}{=} \PY{l+m+mi}{4}
+         
+         \PY{n}{x4} \PY{o}{=} \PY{n}{error\PYZus{}control}\PY{o}{.}\PY{n}{hamming}\PY{p}{(}\PY{n}{m}\PY{p}{,} \PY{n}{p}\PY{p}{,} \PY{n}{n}\PY{p}{,} \PY{n}{k}\PY{p}{)}
+         
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Mensagem com bits de paridade:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{ndarray}\PY{o}{.}\PY{n}{flatten}\PY{p}{(}\PY{n}{x4}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Mensagem sem bits de paridade:}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+se}{\PYZbs{}n}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{ndarray}\PY{o}{.}\PY{n}{flatten}\PY{p}{(}\PY{n}{error\PYZus{}control}\PY{o}{.}\PY{n}{correction}\PY{p}{(}\PY{n}{x4}\PY{p}{,} \PY{n}{p}\PY{p}{)}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Mensagem com bits de paridade:
+[0 1 1 1 1 0 0 0 0 1 0 1 0 1]
+
+Mensagem sem bits de paridade:
+[0 1 1 1 0 0 1 0]
+
+
+    \end{Verbatim}
 
     \section{Resultados}\label{resultados}
 
 \begin{itemize}
-\tightlist
 \item
-  Utilizar a biblioteca para realizar a simulacao completa do envio e
-  recepcao do sinal. Utilizar o sinal sawtooth e a musica do super mario
+  Resultados produzidos com a simulacao
 \item
-  Fazer a variacao do parametro sigma e analisar o BER e SNR
-\item
-  Grafico com a constelacao e os pontos
+  Correr o lab04 passo a passo, analisar e comentar os resultados
 \end{itemize}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}14}]:} \PY{k+kn}{from} \PY{n+nn}{lab04} \PY{k}{import} \PY{n}{lab04}
+\end{Verbatim}
+
 
     \section{Conclusoes}\label{conclusoes}
 
 \begin{itemize}
 \tightlist
 \item
-  Finalizar o resultado final
+  O que correu bem
 \item
-  Opiniao sobre a simulacao do sinal em codigo vs meio fisico
+  Optimizacoes possiveis
+\item
+  Alteracoes futuras
+\item
+  Casos praticos
+\item
+  Simulacao virtual vs simulacao fisica
 \end{itemize}
 
     \section{Bibliografia}\label{bibliografia}
@@ -333,13 +646,8 @@
 \begin{itemize}
 \tightlist
 \item
-  Sebenta de CPS
+  Sebenta CPS?
 \end{itemize}
-
-    \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor} }]:} 
-\end{Verbatim}
-
 
 
     % Add a bibliography block to the postdoc

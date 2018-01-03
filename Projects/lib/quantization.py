@@ -33,24 +33,24 @@ def vmax(signal: np.ndarray) -> np.float:
 def quantize(signal, vmax, vj, tj):
     tj = np.insert(tj, len(tj), vmax)
 
-    # Majorate mq array as default value
+    # majorate mq array as default value
     mq = np.ones(len(signal)) * np.max(vj)
 
-    # Majorate the index as default value
+    # majorate the index as default value
     # idx = np.ones(shape=(len(signal), 1), dtype='uint8') * len(vj)
     idx = np.ones(len(signal), dtype='uint32') * len(vj)
 
-    # Loop every point in the signal and check if the point is lower or equal
+    # loop every point in the signal and check if the point is lower or equal
     # than any tj elements (decision values)
     for i in range(len(signal)):
         eval = signal[i] <= tj
 
-        # Test whether any array element along a given axis evaluates to True
+        # test whether any array element along a given axis evaluates to True
         if np.any(eval):
             xq_value = vj[eval][0]
             mq[i] = xq_value
 
-            # Get the index
+            # get the index
             k = np.nonzero(eval)[0][0]
             idx[i] = k
 

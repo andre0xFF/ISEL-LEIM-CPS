@@ -195,5 +195,29 @@ def constellation_graph(ax, original_coords: np.ndarray, predicted_coords: np.nd
     ax.set_title(r'$\sigma={}$'.format(sigma))
 
 
+def constellation_configuration():
+    import matplotlib.pyplot as plt
+
+    cell_core_x = np.arange(-3, 4, 2)
+    cell_core_x = np.hstack((cell_core_x, cell_core_x, cell_core_x, cell_core_x))
+    cell_core_y = np.hstack((np.ones(4), np.ones(4) * 3, np.ones(4) * -1, np.ones(4) * -3))
+    labels = ['1001', '1000', '0000', '0001', '1011', '1010', '0010', '0011', '1101', '1100', '0100', '0101', '1111',
+              '1110', '0110', '0111']
+
+    for i in range(len(cell_core_x)):
+        plt.scatter(
+            cell_core_x[i], cell_core_y[i],
+            marker=r'${}$'.format(labels[i]), linestyle='None', s=1000, c=(0, 0, 0)
+        )
+
+    line_x = np.array([-4, 4, 0, 0, -4, 4, -4, 4, -2, -2, 2, 2])
+    line_y = np.array([0, 0, -4, 4, 2, 2, -2, -2, -4, 4, -4, 4])
+
+    for i in range(0, len(line_x), 2):
+        plt.plot([line_x[i], line_x[i + 1]], [line_y[i], line_y[i + 1]], '--', linewidth=1, color=(0.5, 0.5, 0.5))
+
+    plt.show()
+
+
 if __name__ == '__main__':
     main()

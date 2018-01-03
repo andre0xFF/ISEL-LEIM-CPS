@@ -16,15 +16,15 @@ def hamming(x: np.ndarray, P: np.ndarray, n: np.int, r: np.int) -> np.ndarray:
 # y: received message
 # P: parity matrix
 def correction(y: np.ndarray, P: np.ndarray) -> np.ndarray:
-    # Form the H matrix
+    # form the H matrix
     H = np.vstack((P, np.identity(len(P[0]))))
 
-    # Calculate the S matrix
+    # calculate the S matrix
     S = np.dot(y, H) % 2
 
-    # If S is == 0 then there's no error in that sub-message
-    # Else find the row position where sub-message is equal to S
-    # Then flip the bit in the sub-message at row position
+    # if S is == 0 then there's no error in that sub-message
+    # else find the row position where sub-message is equal to S
+    # then flip the bit in the sub-message at row position
     for row in range(len(S)):
         if np.all(S[row] == 0):
             continue
