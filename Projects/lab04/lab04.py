@@ -68,7 +68,7 @@ def exercise():
     x4, coords_o, new_bits = digital_modulation.qam_encode(x3, p=8)
 
     # channel
-    sigma_square = np.array([0.05, 0.1, 0.15, 0.2])
+    sigma_square = np.array([0.05, 0.1, 0.2, 0.3])
 
     snr_channel = np.zeros(len(sigma_square))
     snr_reception = np.zeros(len(sigma_square))
@@ -187,7 +187,7 @@ def constellation_graph(ax, original_coords: np.ndarray, predicted_coords: np.nd
     ax.scatter(
         predicted_coords[plt_coords][0::2],
         predicted_coords[plt_coords][1::2],
-        s=1, c=(1, 0, 0)
+        s=0.5, c=(1, 0, 0)
     )
 
     ax.set_xticks(np.arange(-4, 5))
@@ -196,8 +196,6 @@ def constellation_graph(ax, original_coords: np.ndarray, predicted_coords: np.nd
 
 
 def constellation_configuration():
-    import matplotlib.pyplot as plt
-
     cell_core_x = np.arange(-3, 4, 2)
     cell_core_x = np.hstack((cell_core_x, cell_core_x, cell_core_x, cell_core_x))
     cell_core_y = np.hstack((np.ones(4), np.ones(4) * 3, np.ones(4) * -1, np.ones(4) * -3))

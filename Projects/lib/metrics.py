@@ -23,7 +23,7 @@ def ber_manchester(eb, n0):
 
 
 def ber_qam(k, m, n0, eb):
-    return (2 / k) * (1 - 1 / np.sqrt(m)) * erfc(np.sqrt(((3 * k) / (2  * (m - 1))) * (eb / n0)))
+    return (2 / k) * (1 - 1 / np.sqrt(m)) * erfc(np.sqrt(((3 * k) / (2 * (m - 1))) * (eb / n0)))
 
 
 def eb_manchester(a, tb):
